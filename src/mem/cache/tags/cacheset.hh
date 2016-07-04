@@ -49,6 +49,8 @@
 #define __CACHESET_HH__
 
 #include <cassert>
+#include <cmath>
+#include <iostream>
 
 #include "mem/cache/blk.hh" // base class
 
@@ -62,8 +64,13 @@ class CacheSet
     /** The associativity of this set. */
     int assoc;
 
-    /** Cache blocks in this set, maintained in LRU order 0 = MRU. */
+    /** Cache blocks in this set, maintained in LRU order 0 = MRU. Or heap in LRFU.*/
     Blktype **blks;
+    double *CRFList;
+    uint64_t *lastRefList;
+
+    /** Counter used in LRFC*/
+    uint64_t tc;
 
     /**
      * Find a block matching the tag in this set.
@@ -87,6 +94,15 @@ class CacheSet
      */
     void moveToTail(Blktype *blk);
 
+    void tcUp();
+
+    void resetBlockInfo(Blktype *blk);
+
+    void replaceRoot(Blktype *blk);
+
+  protected:
+    void Restore(int idx);
+    double F_LRFU(uint64_t delta);
 };
 
 template <class Blktype>
@@ -164,6 +180,85 @@ CacheSet<Blktype>::moveToTail(Blktype *blk)
         next = tmp;
         --i;
     } while (next != blk);
+}
+
+template <class Blktype>
+void
+CacheSet<Blktype>::tcUp()
+{
+    tc++;
+}
+
+template <class Blktype>
+void
+CacheSet<Blktype>::resetBlockInfo(Blktype *blk)
+{
+    int blkIdx = 0;
+    while (blks[blkIdx] != blk) {
+        blkIdx++;
+    }
+
+    CRFList[blkIdx] = F_LRFU(0) + F_LRFU(tc - lastRefList[blkIdx]) * CRFList[blkIdx];
+    lastRefList[blkIdx] = tc;
+    Restore(blkIdx);
+
+}
+
+template <class Blktype>
+void
+CacheSet<Blktype>::replaceRoot(Blktype *blk)
+{
+    //std::cout<<"replaceRoot1"<<std::endl;
+    blks[0] = blk;
+    //std::cout<<"replaceRoot1.1"<<std::endl;
+    CRFList[0] = F_LRFU(0);
+    //std::cout<<"replaceRoot1.2"<<std::endl;
+    lastRefList[0] = tc;
+    //std::cout<<"replaceRoot1.5"<<std::endl;
+    Restore(0);
+    //std::cout<<"replaceRoot2"<<std::endl;
+}
+
+template <class Blktype>
+void
+CacheSet<Blktype>::Restore(int idx)
+{
+    if (idx * 2 + 1 >= assoc) {
+        return;
+    }
+
+    int smaller;
+
+    if (idx * 2 + 1 == assoc - 1) {
+        smaller = assoc - 1;
+    }
+    else {
+        smaller = F_LRFU(tc - lastRefList[idx * 2 + 1]) * CRFList[idx * 2 + 1] >
+                    F_LRFU(tc - lastRefList[idx * 2 + 2]) * CRFList[idx * 2 + 2] ?
+                    idx * 2 + 2 : idx * 2 + 1;
+    }
+    if (F_LRFU(tc - lastRefList[idx]) * CRFList[idx] >
+        F_LRFU(tc - lastRefList[smaller]) * CRFList[smaller]) {
+        uint64_t tmp1;
+        double tmp2;
+        Blktype* tmp3;
+        //swap
+        tmp3 = blks[idx]; blks[idx] = blks[smaller]; blks[smaller] = tmp3;
+        tmp1 = lastRefList[idx]; lastRefList[idx] = lastRefList[smaller]; lastRefList[smaller] = tmp1;
+        tmp2 = CRFList[idx]; CRFList[idx] = CRFList[smaller]; CRFList[smaller] = tmp2;
+        Restore(smaller);
+    }
+}
+
+template <class Blktype>
+double CacheSet<Blktype>::F_LRFU(uint64_t delta)
+{
+	//std::cout<<"F!"<<std::endl;	
+	double lambda = 1;
+        //std::cout<<"F 2!"<<std::endl;
+	double rlt = pow(0.5, lambda * delta);
+        //std::cout<<"F 3!"<<std::endl;
+	return rlt;
 }
 
 #endif
