@@ -81,3 +81,7 @@ class LRFU(BaseSetAssoc):
     cxx_class = 'LRFU'
     cxx_header = "mem/cache/tags/lrfu.hh"
 
+class DoubleQ(BaseSetAssoc):
+	type = 'DoubleQ'
+	cxx_class = 'DoubleQ'
+	cxx_header = "mem/cache/tags/double_q.hh"

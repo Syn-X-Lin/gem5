@@ -51,6 +51,12 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
+#include <vector>
+#include <iostream>
+
+using std::vector;
+using std::cout;
+using std::endl;
 
 #include "mem/cache/blk.hh" // base class
 
@@ -69,8 +75,16 @@ class CacheSet
     double *CRFList;
     uint64_t *lastRefList;
 
-    /** Counter used in LRFC*/
+    /** Counter used in LRFU*/
     uint64_t tc;
+
+    /** Vars used in 2Q */
+    Addr *blkAddr;
+    uint32_t blk_in_use;
+    vector<uint32_t> A1in;
+    vector<Addr> A1out;
+    vector<uint32_t> Am;
+    uint32_t replaceIdx;
 
     /**
      * Find a block matching the tag in this set.
@@ -99,6 +113,17 @@ class CacheSet
     void resetBlockInfo(Blktype *blk);
 
     void replaceRoot(Blktype *blk);
+
+    /* functions used in 2q **/
+    bool isInAm(Blktype *blk);
+    bool isInA1out(Addr addr);
+    bool isInA1in(Blktype *blk);
+
+    void moveToHeadAm(Blktype *blk);
+    void addToHeadA1in();
+    void addToHeadAm();
+
+    Blktype* findVictim2Q();
 
   protected:
     void Restore(int idx);
@@ -259,6 +284,99 @@ double CacheSet<Blktype>::F_LRFU(uint64_t delta)
 	double rlt = pow(0.5, lambda * delta);
         //std::cout<<"F 3!"<<std::endl;
 	return rlt;
+}
+
+template <class Blktype>
+bool CacheSet<Blktype>::isInAm(Blktype *blk)
+{
+    for(int i = 0; i < Am.size(); i++) {
+        if (blks[Am[i]] == blk) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+template <class Blktype>
+bool CacheSet<Blktype>::isInA1out(Addr addr)
+{
+    for(int i = 0; i < A1out.size(); i++) {
+        if (A1out[i] == addr) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+template <class Blktype>
+bool CacheSet<Blktype>::isInA1in(Blktype *blk)
+{
+    for(int i = 0; i < A1in.size(); i++) {
+        if (blks[A1in[i]] == blk) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+template <class Blktype>
+void CacheSet<Blktype>::moveToHeadAm(Blktype *blk)
+{
+    int idx = -1;
+    while (blks[Am[++idx]] != blk);
+    for (int i = idx; i > 0; i--) {
+        Blktype *tmp;
+        tmp = blks[i];
+        blks[i] = blks[i-1];
+        blks[i-1] = tmp;
+        // swap i & i-1
+    }
+}
+
+template <class Blktype>
+void CacheSet<Blktype>::addToHeadA1in()
+{
+    A1in.insert(A1in.begin(), replaceIdx);
+}
+
+template <class Blktype>
+void CacheSet<Blktype>::addToHeadAm()
+{
+    Am.insert(Am.begin(), replaceIdx);
+}
+
+template <class Blktype>
+Blktype* CacheSet<Blktype>::findVictim2Q()
+{
+    uint32_t Kin = assoc / 4, Kout = assoc / 2;
+    if (Kin == 0) {
+        Kin = 1;
+    }
+    if (Kout == 0) {
+        Kout = 1;
+    }
+    //cout<<"fin2Q, blk_in_use="<<blk_in_use<<endl;
+    if (blk_in_use < assoc) {
+	//cout<<"Mark1 blk_in_use="<<blk_in_use<<endl;
+        replaceIdx = blk_in_use;
+        blk_in_use++;
+        return blks[replaceIdx];
+    }
+    else if (A1in.size() > Kin) {
+	//cout<<"Mark2"<<endl;
+        replaceIdx = A1in[A1in.size()-1];
+        A1in.pop_back();
+        A1out.insert(A1out.begin(), blkAddr[replaceIdx]);
+        if (A1out.size() > Kout) {
+            A1out.pop_back();
+        }
+        return blks[replaceIdx];
+    } else {
+	//cout<<"Mark3  "<<Am.size()<<endl;
+        replaceIdx = Am[Am.size()-1];
+        Am.pop_back();
+        return blks[replaceIdx];
+    }
 }
 
 #endif

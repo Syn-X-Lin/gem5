@@ -89,6 +89,8 @@ BaseSetAssoc::BaseSetAssoc(const Params *p)
         sets[i].blks = new BlkType*[assoc];
 	sets[i].CRFList = new double[assoc];
         sets[i].lastRefList = new uint64_t[assoc];
+        sets[i].blkAddr = new Addr [assoc];
+	sets[i].blk_in_use = 0;
         // link in the data blocks
         for (unsigned j = 0; j < assoc; ++j) {
             // locate next cache block
