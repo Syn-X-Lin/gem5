@@ -91,6 +91,7 @@ LRU::insertBlock(PacketPtr pkt, BlkType *blk)
     BaseSetAssoc::insertBlock(pkt, blk);
 
     int set = extractSet(pkt->getAddr());
+
     sets[set].moveToHead(blk);
 }
 

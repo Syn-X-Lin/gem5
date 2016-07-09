@@ -85,3 +85,8 @@ class DoubleQ(BaseSetAssoc):
 	type = 'DoubleQ'
 	cxx_class = 'DoubleQ'
 	cxx_header = "mem/cache/tags/double_q.hh"
+
+class MADDR(BaseSetAssoc):
+    type = 'MADDR'
+    cxx_class = 'MADDR'
+    cxx_header = "mem/cache/tags/maddr.hh"

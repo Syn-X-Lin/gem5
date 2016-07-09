@@ -125,6 +125,12 @@ class CacheSet
 
     Blktype* findVictim2Q();
 
+    /* functions used in MADDR**/
+    Blktype* findFarthestAddrBlk();
+    void moveToHeadMaddr(Blktype *blk, Addr addr);
+    void moveToTailMaddr(Blktype *blk);
+
+
   protected:
     void Restore(int idx);
     double F_LRFU(uint64_t delta);
@@ -377,6 +383,87 @@ Blktype* CacheSet<Blktype>::findVictim2Q()
         Am.pop_back();
         return blks[replaceIdx];
     }
+}
+
+template <class Blktype>
+Blktype* CacheSet<Blktype>::findFarthestAddrBlk()
+{
+    uint32_t idx = assoc - 1;
+    int addr_dist = 0;
+    for(uint32_t j = assoc - 1; j >= 1; j--) {
+        int dist = int(blkAddr[0]) - int(blkAddr[j]);
+        if (dist < 0) {
+            dist = -dist;
+        }
+        if (dist > addr_dist) {
+            idx = j;
+            addr_dist = dist;
+        }
+    }
+    return blks[idx];
+}
+
+template <class Blktype>
+void CacheSet<Blktype>::moveToHeadMaddr(Blktype *blk, Addr addr)
+{
+    // nothing to do if blk is already head
+    if (blks[0] == blk) {
+        blkAddr[0] = addr;
+        return;
+    }
+
+    // write 'next' block into blks[i], moving up from MRU toward LRU
+    // until we overwrite the block we moved to head.
+
+    // start by setting up to write 'blk' into blks[0]
+    int i = 0;
+    Blktype *next = blk;
+    Addr Naddr = addr;
+    do {
+        assert(i < assoc);
+        // swap blks[i] and next
+        Blktype *tmp = blks[i];
+        blks[i] = next;
+        next = tmp;
+
+        Addr Atmp = blkAddr[i];
+        blkAddr[i] = Naddr;
+        Naddr = Atmp;
+        
+        ++i;
+    } while (next != blk);
+}
+
+template <class Blktype>
+void CacheSet<Blktype>::moveToTailMaddr(Blktype *blk)
+{
+    if (blks[assoc - 1] == blk)
+        return;
+
+    // write 'next' block into blks[i], moving from LRU to MRU
+    // until we overwrite the block we moved to tail.
+
+    // start by setting up to write 'blk' into tail
+    int i = assoc - 1;
+    Blktype *next = blk;
+    Addr Naddr = 0;
+    do {
+        assert(i >= 0);
+        // swap blks[i] and next
+        Blktype *tmp = blks[i];
+        blks[i] = next;
+        next = tmp;
+
+        Addr Atmp = blkAddr[i];
+        blkAddr[i] = Naddr;
+        Naddr = Atmp;
+
+        if (next == blk) {
+            blkAddr[assoc - 1] = Naddr;
+        }
+
+        --i;
+    } while (next != blk);
 }
 
 #endif
