@@ -55,10 +55,10 @@ int EnergyMgmt::consumeEnergy(double val)
     /* Todo: there should be a hot-plug state machine to deal with state changes of the whole system */
     /* Todo: power off/on should be considered as msgs instead of specified functions */
     /* Power off/on if power reaches threshold */
-    if (state == POWER_ON && val < 0) {
+    if (state == POWER_ON && energy_remained < 0) {
         state = POWER_OFF;
         broadcastPowerOff();
-    } else if (state == POWER_OFF && val > 0) {
+    } else if (state == POWER_OFF && energy_remained > 0) {
         state = POWER_ON;
         broadcastPowerOn();
     }
