@@ -3,6 +3,7 @@
 //
 
 #include "engy/energy_object.hh"
+#include "engy/energy_port.hh"
 
 void EnergyObject::setSimObject(SimObject *_sim)
 {
@@ -11,6 +12,10 @@ void EnergyObject::setSimObject(SimObject *_sim)
 }
 int EnergyObject::consumeEnergy(double _energy)
 {
+    EnergyMsg msg;
+    msg.type = CONSUME_ENERGY;
+    msg.val = _energy;
+    _seport.signalMsg(msg);
     return 1;
 }
 
