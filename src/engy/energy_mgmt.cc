@@ -4,15 +4,16 @@
 #include <fstream>
 #include "engy/energy_mgmt.hh"
 #include "debug/EnergyMgmt.hh"
+#include "sim/eventq.hh"
 
 EnergyMgmt::EnergyMgmt(const Params *p)
         : SimObject(p),
           state(INIT_STATE),
           time_unit(p->energy_time_unit),
           energy_remained(0),
-          event_poweroff(this),
-          event_poweron(this),
-          event_energy_harvest(this),
+          event_poweroff(this, false, Event::Energy_Pri),
+          event_poweron(this, false, Event::Energy_Pri),
+          event_energy_harvest(this, false, Event::Energy_Pri),
           _path_energy_profile(p->path_energy_profile)
 {
 
@@ -57,10 +58,12 @@ int EnergyMgmt::consumeEnergy(double val)
     /* Power off/on if power reaches threshold */
     if (state == POWER_ON && energy_remained < 0) {
         state = POWER_OFF;
-        broadcastPowerOff();
+        //broadcastPowerOff();
+        schedule(event_poweroff, curTick());
     } else if (state == POWER_OFF && energy_remained > 0) {
         state = POWER_ON;
-        broadcastPowerOn();
+        //broadcastPowerOn();
+        schedule(event_poweron, curTick());
     }
 
     return 1;

@@ -158,6 +158,10 @@ class EventBase
     /// (such as writebacks).
     static const Priority CPU_Tick_Pri =                50;
 
+    /// Energy event must happer at the end of each cycle
+    /// because it need to make changes to events others have triggered
+    static const Priority Energy_Pri =                  60;
+
     /// Statistics events (dump, reset, etc.) come after
     /// everything else, but before exit.
     static const Priority Stat_Event_Pri =              90;
