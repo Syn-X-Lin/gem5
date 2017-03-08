@@ -10,21 +10,24 @@ int EnergyPort::handleMsg(EnergyMsg msg)
 {
     int rlt = 1;
 
+    if (!owner)
+        return 0;
+
     switch(msg.type)
     {
         case CONSUME_ENERGY:
             if (port_type != MASTERPORT)
-                return 0;
+                return 1;
             rlt = owner->consumeEnergy(msg.val);
             break;
         case POWEROFF:
             if (port_type != SLAVEPORT)
-                return 0;
+                return 1;
             rlt = owner->powerOff();
             break;
         case POWERON:
             if (port_type != SLAVEPORT)
-                return 0;
+                return 1;
             rlt = owner->powerOn();
             break;
     }
@@ -43,6 +46,10 @@ int MasterEnergyPort::broadcastMsg(EnergyMsg msg)
 {
     int rlt = 1;
     unsigned long len = slave_list.size();
+
+    if (len == 0)
+        rlt = 0;
+
     for (int i = 0; i < len; i++) {
         if (!slave_list[i]->handleMsg(msg)) {
             rlt = 0;
@@ -61,5 +68,8 @@ int SlaveEnergyPort::setMaster(MasterEnergyPort &_master)
 
 int SlaveEnergyPort::signalMsg(EnergyMsg msg)
 {
+    if (!master)
+        return 0;
+
     return master->handleMsg(msg);
 }
