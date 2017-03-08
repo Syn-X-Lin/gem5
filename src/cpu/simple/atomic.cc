@@ -508,6 +508,8 @@ AtomicSimpleCPU::tick()
 {
     DPRINTF(SimpleCPU, "Tick\n");
 
+    consumeEnergy(5);
+
     Tick latency = 0;
 
     for (int i = 0; i < width || locked; ++i) {
@@ -634,6 +636,20 @@ void
 AtomicSimpleCPU::printAddr(Addr a)
 {
     dcachePort.printAddr(a);
+}
+
+int
+AtomicSimpleCPU::powerOff()
+{
+    deschedule(tickEvent);
+    return 1;
+}
+
+int
+AtomicSimpleCPU::powerOn()
+{
+    schedule(tickEvent, curTick() + 10);
+    return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////
