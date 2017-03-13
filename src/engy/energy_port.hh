@@ -8,16 +8,9 @@
 #include <string>
 #include <vector>
 
-enum EnergyMsgType
-{
-    CONSUME_ENERGY = 1,
-    POWEROFF = 2,
-    POWERON = 3
-};
-
 struct EnergyMsg
 {
-    EnergyMsgType type;
+    int32_t type;
     double val;
 };
 

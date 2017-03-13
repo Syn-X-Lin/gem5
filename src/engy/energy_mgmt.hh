@@ -8,6 +8,8 @@
 #include "sim/sim_object.hh"
 #include "params/EnergyMgmt.hh"
 
+class BaseEnergySM;
+
 class EnergyMgmt : public SimObject
 {
 public:
@@ -21,24 +23,19 @@ public:
     virtual void init();
     /* Harvest energy if val < 0 */
     virtual int consumeEnergy(double val);
-    void broadcastPowerOff();
-    void broadcastPowerOn();
+    void broadcastMsg();
+    int broadcastMsgAsEvent(const EnergyMsg &msg);
+    int handleMsg(const EnergyMsg &msg);
 
 protected:
-    enum PowerState {
-        INIT_STATE,
-        POWER_OFF,
-        POWER_ON,
-        ERROR_STATE
-    };
-    PowerState state;
     int time_unit;
     double energy_remained;
-    EventWrapper<EnergyMgmt, &EnergyMgmt::broadcastPowerOff> event_poweroff;
-    EventWrapper<EnergyMgmt, &EnergyMgmt::broadcastPowerOn> event_poweron;
+    EnergyMsg msg_togo;
+    EventWrapper<EnergyMgmt, &EnergyMgmt::broadcastMsg> event_msg;
     std::vector<double> energy_harvest_data;
     void energyHarvest();
     EventWrapper<EnergyMgmt, &EnergyMgmt::energyHarvest> event_energy_harvest;
+    BaseEnergySM *state_machine;
 
 private:
     std::vector<double> readEnergyProfile();

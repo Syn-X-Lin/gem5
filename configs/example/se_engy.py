@@ -194,10 +194,11 @@ system.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock,
                                        voltage_domain =
                                        system.cpu_voltage_domain)
 
-# Create an energy management module
+# Create an energy management module with simple state machine
 system.energy_mgmt = EnergyMgmt(path_energy_profile = options.energy_profile,
-                                energy_time_unit=options.energy_time_unit,
-                                energy_modules=options.energy_modules)
+                                energy_time_unit = options.energy_time_unit,
+                                energy_modules = options.energy_modules,
+                                state_machine = SimpleEnergySM())
 
 # All cpus belong to a common cpu_clk_domain, therefore running at a common
 # frequency.

@@ -3,17 +3,17 @@
 //
 #include <fstream>
 #include "engy/energy_mgmt.hh"
+#include "engy/state_machine.hh"
 #include "debug/EnergyMgmt.hh"
 #include "sim/eventq.hh"
 
 EnergyMgmt::EnergyMgmt(const Params *p)
         : SimObject(p),
-          state(INIT_STATE),
           time_unit(p->energy_time_unit),
           energy_remained(0),
-          event_poweroff(this, false, Event::Energy_Pri),
-          event_poweron(this, false, Event::Energy_Pri),
+          event_msg(this, false, Event::Energy_Pri),
           event_energy_harvest(this, false, Event::Energy_Pri),
+          state_machine(p->state_machine),
           _path_energy_profile(p->path_energy_profile)
 {
 
@@ -26,10 +26,14 @@ EnergyMgmt::~EnergyMgmt()
 
 void EnergyMgmt::init()
 {
-    /* Read energy profile */
+    /* Read energy profile. */
     energy_harvest_data = readEnergyProfile();
     /* Reset energy remained to 0. */
     energy_remained = 0;
+    /* Set mgmt pointer in state machine. */
+    if (state_machine) {
+        state_machine->mgmt = this;
+    }
 
     DPRINTF(EnergyMgmt, "Energy Management module initialized!\n");
     DPRINTF(EnergyMgmt, "Energy profile: %s (Time unit: %d ticks)\n",
@@ -37,10 +41,6 @@ void EnergyMgmt::init()
 
     /* Trigger first energy harvest event here */
     energyHarvest();
-
-    /* Change current state to POWER_ON */
-    state = POWER_ON;
-
 }
 
 int EnergyMgmt::consumeEnergy(double val)
@@ -55,34 +55,31 @@ int EnergyMgmt::consumeEnergy(double val)
 
     /* Todo: there should be a hot-plug state machine to deal with state changes of the whole system */
     /* Todo: power off/on should be considered as msgs instead of specified functions */
-    /* Power off/on if power reaches threshold */
-    if (state == POWER_ON && energy_remained < 0) {
-        state = POWER_OFF;
-        //broadcastPowerOff();
-        schedule(event_poweroff, curTick());
-    } else if (state == POWER_OFF && energy_remained > 0) {
-        state = POWER_ON;
-        //broadcastPowerOn();
-        schedule(event_poweron, curTick());
-    }
+    state_machine->update(energy_remained);
 
     return 1;
 }
 
-void EnergyMgmt::broadcastPowerOff()
+void EnergyMgmt::broadcastMsg()
 {
-    EnergyMsg msg;
-    msg.type = POWEROFF;
-    _meport.broadcastMsg(msg);
-    DPRINTF(EnergyMgmt, "Insufficient energy, system power off.\n");
+    _meport.broadcastMsg(msg_togo);
 }
 
-void EnergyMgmt::broadcastPowerOn()
+int EnergyMgmt::broadcastMsgAsEvent(const EnergyMsg &msg)
 {
-    EnergyMsg msg;
-    msg.type = POWERON;
-    _meport.broadcastMsg(msg);
-    DPRINTF(EnergyMgmt, "Sufficient energy, system power on.\n");
+    msg_togo = msg;
+    schedule(event_msg, curTick());
+    return 1;
+}
+
+int EnergyMgmt::handleMsg(const EnergyMsg &msg)
+{
+    /* msg type should be 0 here, for 0 represents energy consuming, */
+    /* and EnergyMgmt module can only handle energy consuming msg*/
+    if (msg.type)
+        return 0;
+
+    return consumeEnergy(msg.val);
 }
 
 std::vector<double> EnergyMgmt::readEnergyProfile()

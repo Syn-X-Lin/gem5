@@ -216,8 +216,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
      */
     void printAddr(Addr a);
 
-    virtual int powerOff();
-    virtual int powerOn();
+    virtual int handleMsg(const EnergyMsg &msg);
 };
 
 #endif // __CPU_SIMPLE_ATOMIC_HH__

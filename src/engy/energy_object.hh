@@ -30,7 +30,6 @@ public:
     virtual int consumeEnergy(double _energy);
 
     // Methods to implement actions taken when power on/off by child classes.
-    virtual int powerOn();
-    virtual int powerOff();
+    virtual int handleMsg(const EnergyMsg &msg);
 };
 #endif //GEM5_ENERGY_OBJECT_HH

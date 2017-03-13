@@ -52,6 +52,7 @@
 #include "debug/Drain.hh"
 #include "debug/ExecFaulting.hh"
 #include "debug/SimpleCPU.hh"
+#include "debug/EnergyMgmt.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "mem/physical.hh"
@@ -59,6 +60,7 @@
 #include "sim/faults.hh"
 #include "sim/system.hh"
 #include "sim/full_system.hh"
+#include "engy/state_machine.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -508,7 +510,7 @@ AtomicSimpleCPU::tick()
 {
     DPRINTF(SimpleCPU, "Tick\n");
 
-    consumeEnergy(5);
+    consumeEnergy(1);
 
     Tick latency = 0;
 
@@ -639,17 +641,21 @@ AtomicSimpleCPU::printAddr(Addr a)
 }
 
 int
-AtomicSimpleCPU::powerOff()
+AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
 {
-    deschedule(tickEvent);
-    return 1;
-}
-
-int
-AtomicSimpleCPU::powerOn()
-{
-    schedule(tickEvent, curTick() + 10);
-    return 1;
+    int rlt = 1;
+    DPRINTF(EnergyMgmt, "handleMsg called at %lu, msg.type=%d\n", curTick(), msg.type);
+    switch(msg.type){
+        case (int) SimpleEnergySM::MsgType::POWEROFF:
+            deschedule(tickEvent);
+            break;
+        case (int) SimpleEnergySM::MsgType::POWERON:
+            schedule(tickEvent, curTick() + 10);
+            break;
+        default:
+            rlt = 0;
+    }
+    return rlt;
 }
 
 ////////////////////////////////////////////////////////////////////////

@@ -8,31 +8,7 @@
 
 int EnergyPort::handleMsg(EnergyMsg msg)
 {
-    int rlt = 1;
-
-    if (!owner)
-        return 0;
-
-    switch(msg.type)
-    {
-        case CONSUME_ENERGY:
-            if (port_type != MASTERPORT)
-                return 1;
-            rlt = owner->consumeEnergy(msg.val);
-            break;
-        case POWEROFF:
-            if (port_type != SLAVEPORT)
-                return 1;
-            rlt = owner->powerOff();
-            break;
-        case POWERON:
-            if (port_type != SLAVEPORT)
-                return 1;
-            rlt = owner->powerOn();
-            break;
-    }
-
-    return rlt;
+    return owner->handleMsg(msg);
 }
 
 int MasterEnergyPort::bindSlave(SlaveEnergyPort &_slave)

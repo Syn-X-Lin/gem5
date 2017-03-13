@@ -13,7 +13,8 @@ void EnergyObject::setSimObject(SimObject *_sim)
 int EnergyObject::consumeEnergy(double _energy)
 {
     EnergyMsg msg;
-    msg.type = CONSUME_ENERGY;
+    /* Zero is the default value of msg.type, indicating energy consuming*/
+    msg.type = 0;
     msg.val = _energy;
     _seport.signalMsg(msg);
     return 1;
@@ -29,12 +30,7 @@ SlaveEnergyPort& EnergyObject::getSlaveEnergyPort()
     return _seport;
 }
 
-int EnergyObject::powerOff()
-{
-    return 1;
-}
-
-int EnergyObject::powerOn()
+int EnergyObject::handleMsg(const EnergyMsg &msg)
 {
     return 1;
 }
