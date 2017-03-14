@@ -1,4 +1,15 @@
-Original README
+gem5-NVP
+===
+The gem5-NVP is a simulating frame for non-volatile processors (NVP) and non-volatile systems based on the gem5 simulator. It provides multiple interfaces for adding description of SimObjects' energy behavior as well as a energy management module which allows users to simulate state changes (power-on, power-off, etc.) easily.
+
+# Build
+
+# Run
+
+# Usages
+
+
+gem5 README
 ===
 This is the gem5 simulator.
 
