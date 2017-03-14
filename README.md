@@ -2,10 +2,17 @@ gem5-NVP
 ===
 The gem5-NVP is a simulating framework for non-volatile processors (NVP) and non-volatile systems based on the gem5 simulator. It provides multiple interfaces for adding description of SimObjects' energy behavior as well as a energy management module which allows users to simulate state changes (power-on, power-off, etc.) easily.
 
-## Pre-Requirement
+## <span id="contents">Contents</span>
+* [Contents](#contents)
+* [Pre-Requirement](#prereq)
+* [Download](#download)
+* [Build](#build)
+* [Usages](#usages)
+
+## <span id="prereq">Pre-Requirement</span>
 gem5-NVP depends on nothing besides the dependencies of gem5 simulator. Tools needed before building gem5-NVP can be found at http://www.gem5.org/Dependencies.
 
-## Download
+## <span id="download">Download</span>
 gem5-NVP uses github to control its version. The latest stable version can be found at https://github.com/zlfben/gem5:master, and there are previous versions among tags of the repository. You can get the latest stable version like this:
 ```Bash
 git clone https://github.com/zlfben/gem5.git
@@ -13,16 +20,29 @@ cd gem5
 git checkout master
 ```
 
-## Build
-The build process of gem5-NVP is exactly the same as gem5 simulator. Scons is used to build target system to be simulated. Theoretically, different ISAs are supported by gem5-NVP. However, gem5-NVP is tested under ARM, so the following build option is recommended:
+## <span id="build">Build</span>
+The build process of gem5-NVP is almost the same as gem5 simulator. Scons is used to build target system to be simulated. Theoretically, different ISAs are supported by gem5-NVP. However, gem5-NVP is tested under ARM, so the following build option is recommended:
 ```Bash
+mv README.md README
 scons build/ARM/gem.debug
 ```
+One tricky thing is that gem5 checks its original raw README during its build, so we can simply rename README.md into README. Markdown file is used only because of better github page.
 
-## Run
+## <span id="usages">Usages</span>
+### Flags of Simulating Script
+### Flags of Target System
+### Example
+The following examples will simulate systems running "./test/test-progs/hello/bin/arm/linux/hello".
+To run exactly like gem5 (No energy behavior is simulated):
+```Bash
+build/ARM/gem5.debug configs/example/se_engy.py -c tests/test-progs/hello/bin/arm/linux/hello
+```
+To simulate atomic cpu's energy behavior, using energy profile "./profile/energy_prof", with energy_time_unit = 100, printing all the debug information of energy behavior into "./m5out/a.out":
+```Bash
+build/ARM/gem5.debug --debug-flags=EnergyMgmt --debug-file=a.out configs/example/se_engy.py -c tests/test-progs/hello/bin/arm/linux/hello --energy-profile=./profile/energy_prof --energy-time-unit=100 --energy-modules='cpu'
+```
 
-## Usages
-
+gem5-NVP also supports more advanced functions which requires developers to modify source code, like simulating systems with 2-threshold energy state machine. Tutorials and examples of such usage can be found at https://zlfben.github.io/gem5.
 
 gem5 README
 ===
