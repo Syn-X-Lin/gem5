@@ -245,7 +245,7 @@ def addSEOptions(parser):
 
 def addEngyOptions(parser):
     # Energy Management Options
-    parser.add_option("--energy-profile", default="./energy_prof",
+    parser.add_option("--energy-profile", default="",
                       help="Path to energy profile.")
     parser.add_option("--energy-time-unit", action="store", type="int",
                       default=1000,

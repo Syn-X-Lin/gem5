@@ -85,11 +85,15 @@ int EnergyMgmt::handleMsg(const EnergyMsg &msg)
 std::vector<double> EnergyMgmt::readEnergyProfile()
 {
     std::vector<double> data;
+    data.resize(0);
+    /* Return empty vector is no energy profile is provided. */
+    if (_path_energy_profile == "")
+        return data;
+
     double temp;
     std::ifstream fin;
     fin.open(_path_energy_profile.c_str());
     /* Read energy profile and store the data into vector. */
-    data.resize(0);
     while (fin>>temp) {
         data.push_back(temp);
     }
