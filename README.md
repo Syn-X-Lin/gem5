@@ -1,12 +1,27 @@
 gem5-NVP
 ===
-The gem5-NVP is a simulating frame for non-volatile processors (NVP) and non-volatile systems based on the gem5 simulator. It provides multiple interfaces for adding description of SimObjects' energy behavior as well as a energy management module which allows users to simulate state changes (power-on, power-off, etc.) easily.
+The gem5-NVP is a simulating framework for non-volatile processors (NVP) and non-volatile systems based on the gem5 simulator. It provides multiple interfaces for adding description of SimObjects' energy behavior as well as a energy management module which allows users to simulate state changes (power-on, power-off, etc.) easily.
 
-# Build
+## Pre-Requirement
+gem5-NVP depends on nothing besides the dependencies of gem5 simulator. Tools needed before building gem5-NVP can be found at http://www.gem5.org/Dependencies.
 
-# Run
+## Download
+gem5-NVP uses github to control its version. The latest stable version can be found at https://github.com/zlfben/gem5:master, and there are previous versions among tags of the repository. You can get the latest stable version like this:
+```Bash
+git clone https://github.com/zlfben/gem5.git
+cd gem5
+git checkout master
+```
 
-# Usages
+## Build
+The build process of gem5-NVP is exactly the same as gem5 simulator. Scons is used to build target system to be simulated. Theoretically, different ISAs are supported by gem5-NVP. However, gem5-NVP is tested under ARM, so the following build option is recommended:
+```Bash
+scons build/ARM/gem.debug
+```
+
+## Run
+
+## Usages
 
 
 gem5 README
