@@ -30,18 +30,18 @@ One tricky thing is that gem5 checks its original raw README during its build, s
 
 ## <span id="usages">Usages</span>
 Gem5-nvp provides an alternated script based on "./configs/example/se.py" to simulate energy-related systems, using System Call Emulation Mode in gem5. The path to the script is "./configs/example/se_engy.py". Gem5-nvp has several interfaces for users to control the energy behavior of the whole system. Most of the interfaces present as arguments of the "se_engy.py" script, while others (mostly debug output control) present as arguments of the target system such as "build/ARM/gem5.debug". Note: Target system in gem5 already receives arguments to control debug output, and gem5-NVP only adds some debug flags for energy behavior.
-### Arguments of Simulating Script
+#### Arguments of Simulating Script
 |Argument                      |Description                                                                             |
 |:-----------------------------|:---------------------------------------------------------------------------------------|
 |--energy-prof={FILE}          |Locate the path to energy profile.                                                      |
 |--energy-time-unit={TIME_UNIT}|Set time unit of energy profile in ticks. (Default 1000)                                |
 |--energy-modules={MODULES}    |Set which module we care about in case of energy. Separated by space. Example: "cpu mem"|
-### Arguments of Target System Related to gem5-NVP
+#### Arguments of Target System Related to gem5-NVP
 |Argument             |Description                                                                       |
 |:--------------------|:---------------------------------------------------------------------------------|
 |--debug-flags={FLAGS}|Decide what kinds of debug information to print. "EnergyMgmt" for energy behavior.|
 |--debug-file={FILE}  |Set the target file for debug output.                                             |
-### Example
+#### Example
 The following examples will simulate systems running "./test/test-progs/hello/bin/arm/linux/hello".
 To run exactly like gem5 (No energy behavior is simulated):
 ```Bash
