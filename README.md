@@ -52,7 +52,7 @@ To simulate atomic cpu's energy behavior, using energy profile "./profile/energy
 build/ARM/gem5.debug --debug-flags=EnergyMgmt --debug-file=a.out configs/example/se_engy.py -c tests/test-progs/hello/bin/arm/linux/hello --energy-profile=./profile/energy_prof --energy-time-unit=100 --energy-modules='cpu'
 ```
 
-gem5-NVP also supports more advanced functions which requires developers to modify source code, like simulating systems with 2-threshold energy state machine. Tutorials and examples of such usage can be found at https://zlfben.github.io/gem5.
+Gem5-NVP also supports more advanced functions which requires developers to modify source code, like simulating systems with 2-threshold energy state machine. Tutorials and examples of such usage can be found at https://zlfben.github.io/gem5.
 
 gem5 README
 ===
