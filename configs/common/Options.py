@@ -254,6 +254,10 @@ def addEngyOptions(parser):
                       help="""The objects that we care about in case of
                       energy consuming, splitted by space, use " "
                       around the entire string. (e.g. "cpu mem")""")
+    parser.add_option("--thres-high", type="float", default=100,
+                      help="high threshold of energy state machine")
+    parser.add_option("--thres-low", type="float", default=50,
+                      help="low threshold of energy state machine")
 
 def addFSOptions(parser):
     # Simulation options

@@ -198,7 +198,8 @@ system.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock,
 system.energy_mgmt = EnergyMgmt(path_energy_profile = options.energy_profile,
                                 energy_time_unit = options.energy_time_unit,
                                 energy_modules = options.energy_modules,
-                                state_machine = SimpleEnergySM())
+                                state_machine = TwoThresSM(thres_high = options.thres_high,
+                                                           thres_low = options.thres_low))
 
 # All cpus belong to a common cpu_clk_domain, therefore running at a common
 # frequency.
