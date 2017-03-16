@@ -13,7 +13,7 @@ The gem5-NVP is a simulating framework for non-volatile processors (NVP) and non
 Gem5-NVP depends on nothing besides the dependencies of gem5 simulator. Tools needed before building gem5-NVP can be found at http://www.gem5.org/Dependencies.
 
 ## <span id="download">Download</span>
-Gem5-NVP uses github to control its version. The latest stable version can be found at https://github.com/zlfben/gem5:master, and there are previous versions among tags of the repository. You can get the latest stable version like this:
+Gem5-NVP uses github to control its version. The latest stable version can be found at https://github.com/zlfben/gem5:master, and there are previous versions among tags of the repository (nvp-v*.*). You can get the latest stable version like this:
 ```Bash
 git clone https://github.com/zlfben/gem5.git
 cd gem5
