@@ -16,7 +16,7 @@ EnergyMgmt::EnergyMgmt(const Params *p)
           state_machine(p->state_machine),
           _path_energy_profile(p->path_energy_profile)
 {
-
+    msg_togo.resize(0);
 }
 
 EnergyMgmt::~EnergyMgmt()
@@ -53,8 +53,6 @@ int EnergyMgmt::consumeEnergy(double val)
     else
         DPRINTF(EnergyMgmt, "Energy %lf is harvested. Energy remained: %lf\n", -val, energy_remained);
 
-    /* Todo: there should be a hot-plug state machine to deal with state changes of the whole system */
-    /* Todo: power off/on should be considered as msgs instead of specified functions */
     state_machine->update(energy_remained);
 
     return 1;
@@ -62,13 +60,21 @@ int EnergyMgmt::consumeEnergy(double val)
 
 void EnergyMgmt::broadcastMsg()
 {
-    _meport.broadcastMsg(msg_togo);
+    /* Broadcast the first message in the msg queue. */
+    _meport.broadcastMsg(msg_togo[0]);
+    /* Delete the message we broadcast. */
+    msg_togo.erase(msg_togo.begin());
+    /* If there are still messages, schedule a new event. */
+    if (!msg_togo.empty())
+        schedule(event_msg, curTick());
 }
 
 int EnergyMgmt::broadcastMsgAsEvent(const EnergyMsg &msg)
 {
-    msg_togo = msg;
-    schedule(event_msg, curTick());
+    msg_togo.push_back(msg);
+    /* Trigger first msg in the current tick. */
+    if (msg_togo.size() == 1)
+        schedule(event_msg, curTick());
     return 1;
 }
 

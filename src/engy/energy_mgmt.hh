@@ -30,7 +30,8 @@ public:
 protected:
     int time_unit;
     double energy_remained;
-    EnergyMsg msg_togo;
+    /* msg_togo is changed into a queue to prevent bugs in case that multiple state changes occurs in one tick. */
+    std::vector<EnergyMsg> msg_togo;
     EventWrapper<EnergyMgmt, &EnergyMgmt::broadcastMsg> event_msg;
     std::vector<double> energy_harvest_data;
     void energyHarvest();
