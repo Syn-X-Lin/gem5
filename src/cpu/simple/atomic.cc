@@ -510,7 +510,7 @@ AtomicSimpleCPU::tick()
 {
     DPRINTF(SimpleCPU, "Tick\n");
 
-    consumeEnergy(10);
+    consumeEnergy(160);
 
     Tick latency = 0;
 
@@ -648,11 +648,13 @@ AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
     switch(msg.type){
         case (int) TwoThresSM::MsgType::POWEROFF:
             if (tickEvent.scheduled())
+                consumeEnergy(160*7);
                 deschedule(tickEvent);
             break;
         case (int) TwoThresSM::MsgType::POWERON:
             if (!tickEvent.scheduled())
-                schedule(tickEvent, curTick() + clockPeriod());
+                consumeEnergy(160*3);
+                schedule(tickEvent, curTick() + 3 * clockPeriod());
             break;
         default:
             rlt = 0;
