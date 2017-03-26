@@ -9,6 +9,7 @@
 #include "params/EnergyMgmt.hh"
 
 class BaseEnergySM;
+class BaseHarvest;
 
 class EnergyMgmt : public SimObject
 {
@@ -37,6 +38,7 @@ protected:
     void energyHarvest();
     EventWrapper<EnergyMgmt, &EnergyMgmt::energyHarvest> event_energy_harvest;
     BaseEnergySM *state_machine;
+    BaseHarvest *harvest_module;
 
 private:
     std::vector<double> readEnergyProfile();

@@ -4,6 +4,7 @@
 #include <fstream>
 #include "engy/energy_mgmt.hh"
 #include "engy/state_machine.hh"
+#include "engy/harvest.hh"
 #include "debug/EnergyMgmt.hh"
 #include "sim/eventq.hh"
 
@@ -14,6 +15,7 @@ EnergyMgmt::EnergyMgmt(const Params *p)
           event_msg(this, false, Event::Energy_Pri),
           event_energy_harvest(this, false, Event::Energy_Pri),
           state_machine(p->state_machine),
+          harvest_module(p->harvest_module),
           _path_energy_profile(p->path_energy_profile)
 {
     msg_togo.resize(0);
@@ -47,11 +49,13 @@ int EnergyMgmt::consumeEnergy(double val)
 {
     /* Todo: Pass the module which consumed the energy to this function. (Or DPRINTF in the module which consumes energy) */
     /* Consume energy if val > 0, and harvest energy if val < 0 */
-    energy_remained -= val;
-    if (val > 0)
+    if (val > 0) {
+        energy_remained -= val;
         DPRINTF(EnergyMgmt, "Energy %lf is consumed by xxx. Energy remained: %lf\n", val, energy_remained);
-    else
+    } else {
+        energy_remained = harvest_module->energy_harvest(-val, energy_remained);
         DPRINTF(EnergyMgmt, "Energy %lf is harvested. Energy remained: %lf\n", -val, energy_remained);
+    }
 
     state_machine->update(energy_remained);
 

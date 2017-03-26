@@ -4,9 +4,12 @@ Source('energy_mgmt.cc')
 Source('energy_port.cc')
 Source('energy_object.cc')
 Source('state_machine.cc')
+Source('harvest.cc')
 
 SimObject('EnergyMgmt.py')
 SimObject('BaseEnergySM.py')
 SimObject('SimpleEnergySM.py')
+SimObject('BaseHarvest.py')
+SimObject('SimpleHarvest.py')
 
 DebugFlag('EnergyMgmt')
