@@ -15,6 +15,8 @@ EnergyObject empowers SimObjects to take actions when receiving energy messages
 (such as power-on, power-off, back-up, etc.). The following picture shows the 
 inheritance diagram of SimObject.
 
+[[https://github.com/zlfben/gem5/blob/develop/docs/sim_object.jpeg]]
+
 ### Members
 |Member|Description|
 |:-|:-|
