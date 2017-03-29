@@ -134,7 +134,7 @@ of operation when the state is changed. If such notification is needed, "broadca
 called inside "update". Normally the field "type" in EnergyMsg is defined when designing 
 energy state machine, and the operation other parts in the system take is implemented 
 according to those message types.
-#####Example
+##### Example
 Here is an example of a very straight-forward energy state machine, which is the default 
 energy state machine gem5-NVP provides. There are only 2 states, power-on and power-off in 
 the state machine. Once the energy goes below zero, power-off message is sent to the whole 
@@ -174,7 +174,7 @@ The interface gets the current remained energy in the capacitor and the energy i
 profile to perform its calculation. The interface returns the remained energy in the capacitor 
 after the system has harvested the energy provided in the energy profile.
 
-#####Example
+##### Example
 Like the energy state machine module, energy harvesting module also has a default derived class, 
 named "SimpleHarvest". The "energy_harvest" method in it is shown below.
 ```C
