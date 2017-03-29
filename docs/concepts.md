@@ -1,5 +1,5 @@
 Concepts and Structure of gem5-NVP
----
+===
 This document file will introduce some basic ideas and structure 
 used while developing gem5-NVP based on the original gem5 simulator. 
 Ideally, by reading this file one can learn how to describe 
@@ -77,7 +77,7 @@ import m5.internal.pyobject connectEnergyPorts
 # s1, s2: SimObjects in python.
 connectEnergyPorts(s1.getCCObject(), s2.getCCObject)
 ```
-The above code connected s1's master port with s2's slave port.
+The above code connects s1's master port with s2's slave port.
 
 # Energy Management Module
 Energy Management module (aka EnergyMgmt in code) is a new kind of SimObject in 
@@ -111,15 +111,121 @@ SimObject that uses the master port while running.
 |readEnergyProfile|The function to read data from energy profile. Called at initialization stage.|
 
 ### State Machine
-In most non-volatile system, there is a energy state machine to control the system's power state.
+In most non-volatile system, there is a energy state machine to control the system's 
+power state. Gem5-NVP has a energy state machine object to control the system's state. 
+There is a base state machine class called "BaseEnergySM" defining the basic interface a 
+energy state machine should have. Users of gem5-NVP should over-write the interface 
+to achieve a custom state controller they want. An additional function is provided to 
+help the energy state machine to inform the system of state changes.
+```C
+void update(double _energy)
+```
+This interface is used for the system to tell the energy state machine that the remaining 
+energy in the capacitor of the system has changed. Once the system harvests or consume some 
+energy, EnergyMgmt module will call this api to inform the state controller. Users should 
+rewrite this api in their derived state machine class. The state maintained in the object 
+may be changed or maintained according to the energy provided.
+```C
+void broadcastMsg(const EnergyMsg &msg);
+```
+This function is to broadcast a EnergyMsg to the whole system. This interface is
+useful because in most time the state machine has to inform the system to perform some kinds 
+of operation when the state is changed. If such notification is needed, "broadcastMsg" is 
+called inside "update". Normally the field "type" in EnergyMsg is defined when designing 
+energy state machine, and the operation other parts in the system take is implemented 
+according to those message types.
+#####Example
+Here is an example of a very straight-forward energy state machine, which is the default 
+energy state machine gem5-NVP provides. There are only 2 states, power-on and power-off in 
+the state machine. Once the energy goes below zero, power-off message is sent to the whole 
+system, and when energy becomes positive, power-on message is sent. Below is the "update" 
+function of such energy state machine.
+```C
+void SimpleEnergySM::update(double _energy)
+{
+    EnergyMsg msg;
+    msg.val = 0;
+
+    if (state == STATE_INIT) {
+        state = STATE_POWERON;
+    } else if (state == STATE_POWERON && _energy < 0) {
+        state = STATE_POWEROFF;
+        msg.type = MsgType ::POWEROFF;
+        broadcastMsg(msg);
+    } else if (state == STATE_POWEROFF && _energy > 0) {
+        state = STATE_POWERON;
+        msg.type = MsgType::POWERON;
+        broadcastMsg(msg);
+    }
+}
+```
+The derived class of the state machine is called "SimpleEnergySM" in code.
+
 ### Harvesting Module
+Real-world systems have complicated energy harvest module, which includes voltage transform 
+module, rectification module, etc. Gem5-NVP does not care those complex part of energy flow. 
+It only receives energy profile which contains power amplitude at discrete time. The harvesting 
+module only need to tell how much energy can be harvested given one item in the energy profile. 
+The following interface is what a user of gem5-NVP should understand.
+```C
+double energy_harvest(double energy_harvested, double energy_remained)
+```
+The interface gets the current remained energy in the capacitor and the energy item in energy 
+profile to perform its calculation. The interface returns the remained energy in the capacitor 
+after the system has harvested the energy provided in the energy profile.
+
+#####Example
+Like the energy state machine module, energy harvesting module also has a default derived class, 
+named "SimpleHarvest". The "energy_harvest" method in it is shown below.
+```C
+double SimpleHarvest::energy_harvest(double energy_harvested, double energy_remained)
+{
+    return energy_remained + energy_harvested;
+}
+```
+All the energy in the energy profile goes into the capacitor. Simple, isn't it? In real systems, 
+it is really hard to harvest more energy once there is abundant energy in the capacitor, and such 
+limitation can be described in the "energy_harvest" method.
 ### Python Interfaces
+It is possible to control some of the behavior of EnergyMgmt module through python scripts as well as 
+arguments in shell command. The "Get Started" page provides some examples, and users can checkout 
+"configs/example/se_engy.py" to find out how to change the config in python script.
 
 # Other Concepts
+There are some other concepts in gem5-NVP that is important.
 ### Energy Events
+The state changes of the system is implemented through events. Once the state should be changed, the 
+energy state machine put a "state change" event at current tick through "broadcastMsg". Energy state-change
+event is designed to have lower priority than other events so that state changes happens after all other 
+events at current tick finish. In this way state changes would not happen inside one process and bring 
+conflicts.
 ### Energy Profile
+Energy profile is a file that contains amplitude of external power source at discrete time points. All the 
+values in the profile should be separated by line break or space.
+
 ### Debug Flags
+A new debug flag, "EnergyMgmt", is introduced into gem5 by gem5-NVP. Users can use the following command to 
+activate the debug flag:
+```Bash
+build/ARM/gem5.debug --debug-flag=EnergyMgmt --debug-file=your_output_file ...
+```
+If you need to add new debug outputs into the flag, you can simply include "debug/EnergyMgmt.hh" in your 
+code and use "DPRINTF" to print the outputs.
+```C
+#include "debug/EnergyMgmt.hh"
+
+...
+    DPRINTF(EnergyMgmt, "Hello!\n");
+...
+
+```
+
 ### Statistics and Traces
 TBD
 
 # Further Reading
+ - [Introduction to SimObject](http://gem5.org/SimObjects)
+ - [Introduction to Mem System](http://gem5.org/Memory_System)
+ - [Another Introduction to Mem System](http://gem5.org/General_Memory_System)
+ - [How to Add Your Own SimObject](http://learning.gem5.org/book/part2/helloobject.html)
+ - [How to Add Simple MemObject](http://learning.gem5.org/book/part2/memoryobject.html)
