@@ -1,6 +1,6 @@
-gem5-NVP
+Getting Started
 ===
-The gem5-NVP is a simulating framework for non-volatile processors (NVP) and non-volatile systems based on the gem5 simulator. It provides multiple interfaces for adding description of SimObjects' energy behavior as well as a energy management module which allows users to simulate state changes (power-on, power-off, etc.) easily.
+The gem5-NVP is a simulating framework for non-volatile processors (NVP) and non-volatile systems based on the gem5 simulator. It provides multiple interfaces for adding description of SimObjects' energy behavior as well as an energy management module which allows users to simulate state changes (power-on, power-off, etc.) easily.
 
 ## <span id="contents">Contents</span>
 * [Contents](#contents)
@@ -31,16 +31,16 @@ One tricky thing is that gem5 checks its original raw README during its build, s
 ## <span id="usages">Usages</span>
 Gem5-nvp provides an alternated script based on "./configs/example/se.py" to simulate energy-related systems, using System Call Emulation Mode in gem5. The path to the script is "./configs/example/se_engy.py". Gem5-nvp has several interfaces for users to control the energy behavior of the whole system. Most of the interfaces present as arguments of the "se_engy.py" script, while others (mostly debug output control) present as arguments of the target system such as "build/ARM/gem5.debug". Note: Target system in gem5 already receives arguments to control debug output, and gem5-NVP only adds some debug flags for energy behavior.
 #### Arguments of Simulating Script
-|Argument                      |Description                                                                             |
+|Argument |Description |
 |:-----------------------------|:---------------------------------------------------------------------------------------|
-|--energy-prof={FILE}          |Locate the path to energy profile.                                                      |
-|--energy-time-unit={TIME_UNIT}|Set time unit of energy profile in ticks. (Default 1000)                                |
-|--energy-modules={MODULES}    |Set which module we care about in case of energy. Separated by space. Example: "cpu mem"|
+|--energy-prof={FILE} |Locate the path to energy profile. |
+|--energy-time-unit={TIME_UNIT}|Set time unit of energy profile in ticks. (Default 1000) |
+|--energy-modules={MODULES} |Set which module we care about in case of energy. Separated by space. Example: "cpu mem"|
 #### Arguments of Target System Related to gem5-NVP
-|Argument             |Description                                                                       |
+|Argument |Description |
 |:--------------------|:---------------------------------------------------------------------------------|
 |--debug-flags={FLAGS}|Decide what kinds of debug information to print. "EnergyMgmt" for energy behavior.|
-|--debug-file={FILE}  |Set the target file for debug output.                                             |
+|--debug-file={FILE} |Set the target file for debug output. |
 #### Example
 The following examples will simulate systems running "./test/test-progs/hello/bin/arm/linux/hello".
 To run exactly like gem5 (No energy behavior is simulated):
@@ -52,7 +52,7 @@ To simulate atomic cpu's energy behavior, using energy profile "./profile/energy
 build/ARM/gem5.debug --debug-flags=EnergyMgmt --debug-file=a.out configs/example/se_engy.py -c tests/test-progs/hello/bin/arm/linux/hello --energy-profile=./profile/energy_prof --energy-time-unit=100 --energy-modules='cpu'
 ```
 
-Gem5-NVP also supports more advanced functions which requires developers to modify source code, like simulating systems with 2-threshold energy state machine. Tutorials and examples of such usage can be found at https://zlfben.github.io/gem5.
+Gem5-NVP also supports more advanced functions which require developers to modify source code, like simulating systems with 2-threshold energy state machine. Tutorials and examples of such usage can be found at https://github.com/zlfben/gem5/wiki.
 
 gem5 README
 ===
@@ -82,12 +82,12 @@ http://www.gem5.org/Running_gem5 for more information on how to use
 gem5.
 
 The basic source release includes these subdirectories:
-   - configs: example simulation configuration scripts
-   - ext: less-common external packages needed to build gem5
-   - src: source code of the gem5 simulator
-   - system: source for some optional system software for simulated systems
-   - tests: regression tests
-   - util: useful utility programs and files
+  - configs: example simulation configuration scripts
+  - ext: less-common external packages needed to build gem5
+  - src: source code of the gem5 simulator
+  - system: source for some optional system software for simulated systems
+  - tests: regression tests
+  - util: useful utility programs and files
 
 To run full-system simulations, you will need compiled system firmware
 (console and PALcode for Alpha), kernel binaries and one or more disk
