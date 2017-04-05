@@ -24,7 +24,7 @@ git checkout master
 The build process of gem5-NVP is almost the same as gem5 simulator. Scons is used to build target system to be simulated. Theoretically, different ISAs are supported by gem5-NVP. However, gem5-NVP is tested under ARM, so the following build option is recommended:
 ```Bash
 mv README.md README
-scons build/ARM/gem.debug
+scons build/ARM/gem5.debug
 ```
 One tricky thing is that gem5 checks its original raw README during its build, so we can simply rename README.md into README. Markdown file is used only for better github page.
 
