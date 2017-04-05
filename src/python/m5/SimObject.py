@@ -1043,6 +1043,11 @@ class SimObject(object):
         for key,val in kwargs.iteritems():
             setattr(self, key, val)
 
+        # Energy Ports of SimObject
+        self.__dict__['m_energy_port'] = MasterEnergyPort(self)
+        self.__dict__['s_energy_port'] = SlaveEnergyPort(self)
+
+
     # "Clone" the current instance by creating another instance of
     # this instance's class, but that inherits its parameter values
     # and port mappings from the current instance.  If we're in a
@@ -1113,6 +1118,13 @@ class SimObject(object):
         if self._ports.has_key(attr):
             # set up port connection
             self._get_port_ref(attr).connect(value)
+            return
+
+        # Dirty way to connect energy port
+        if hasattr(self, attr) and isinstance(getattr(self, attr), EnergyPort):
+            assert(isinstance(value, EnergyPort))
+            energy_port = getattr(self, attr)
+            energy_port.connectRef(value)
             return
 
         param = self._params.get(attr)
@@ -1461,6 +1473,10 @@ class SimObject(object):
         # order is the same on all hosts
         for (attr, portRef) in sorted(self._port_refs.iteritems()):
             portRef.ccConnect()
+
+    # Create C++ energy port connection
+    def connectEnergyPorts(self):
+        self.m_energy_port.connect()
 
 # Function to provide to C++ so it can look up instances based on paths
 def resolveSimObject(name):

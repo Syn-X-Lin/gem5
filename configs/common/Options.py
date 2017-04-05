@@ -250,10 +250,6 @@ def addEngyOptions(parser):
     parser.add_option("--energy-time-unit", action="store", type="int",
                       default=1000,
                       help="Energy time unit of energy profile in ticks.")
-    parser.add_option("--energy-modules", default="",
-                      help="""The objects that we care about in case of
-                      energy consuming, splitted by space, use " "
-                      around the entire string. (e.g. "cpu mem")""")
 
 def addFSOptions(parser):
     # Simulation options
