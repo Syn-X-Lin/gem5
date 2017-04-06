@@ -29,7 +29,7 @@ public:
     int handleMsg(const EnergyMsg &msg);
 
 protected:
-    int time_unit;
+    Tick time_unit;
     double energy_remained;
     /* msg_togo is changed into a queue to prevent bugs in case that multiple state changes occurs in one tick. */
     std::vector<EnergyMsg> msg_togo;

@@ -247,9 +247,9 @@ def addEngyOptions(parser):
     # Energy Management Options
     parser.add_option("--energy-profile", default="",
                       help="Path to energy profile.")
-    parser.add_option("--energy-time-unit", action="store", type="int",
-                      default=1000,
-                      help="Energy time unit of energy profile in ticks.")
+    parser.add_option("--energy-time-unit", action="store", type="string",
+                      default='1us',
+                      help="Energy time unit of energy profile.")
 
 def addFSOptions(parser):
     # Simulation options

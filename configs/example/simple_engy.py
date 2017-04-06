@@ -11,7 +11,7 @@ system.mem_ranges = [AddrRange('512MB')]
 system.cpu = AtomicSimpleCPU()
 
 system.energy_mgmt = EnergyMgmt(path_energy_profile = 'profile/energy_prof',
-				energy_time_unit = 10000000)
+				energy_time_unit = '10us')
 system.cpu.s_energy_port = system.energy_mgmt.m_energy_port
 
 system.membus = SystemXBar()
