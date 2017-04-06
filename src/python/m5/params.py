@@ -1805,7 +1805,7 @@ class SlaveEnergyPort(EnergyPort):
         self.master = None
         self.is_connected = False
     def connectRef(self, master):
-        if is_connected:
+        if self.is_connected:
             return
         self.master = master
         master.connectRef(self)
