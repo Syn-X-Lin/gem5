@@ -74,6 +74,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     const bool simulate_data_stalls;
     const bool simulate_inst_stalls;
 
+    Tick lat_poweron;
+
     /**
      * Drain manager to use when signaling drain completion
      *
@@ -217,6 +219,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     void printAddr(Addr a);
 
     virtual int handleMsg(const EnergyMsg &msg);
+
+    virtual int virtualInterrupt(Tick tick);
 };
 
 #endif // __CPU_SIMPLE_ATOMIC_HH__

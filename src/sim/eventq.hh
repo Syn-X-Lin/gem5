@@ -158,7 +158,10 @@ class EventBase
     /// (such as writebacks).
     static const Priority CPU_Tick_Pri =                50;
 
-    /// Energy event must happer at the end of each cycle
+    /// Virtual Interrupt happens before energy event and after cpu tick
+    static const Priority Virtual_Interrupt =           55;
+
+    /// Energy event must happens at the end of each cycle
     /// because it need to make changes to events others have triggered
     static const Priority Energy_Pri =                  60;
 

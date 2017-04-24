@@ -117,6 +117,7 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
       ppCommit(nullptr)
 {
     _status = Idle;
+    lat_poweron = 0;
 }
 
 
@@ -644,17 +645,35 @@ int
 AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
 {
     int rlt = 1;
+    Tick lat = 0;
     DPRINTF(EnergyMgmt, "handleMsg called at %lu, msg.type=%d\n", curTick(), msg.type);
     switch(msg.type){
         case (int) SimpleEnergySM::MsgType::POWEROFF:
+            lat = tickEvent.when() - curTick();
+            if (lat <= clockPeriod())
+                lat_poweron = 0;
+            else
+                lat_poweron = lat + clockPeriod() - lat % clockPeriod();
             deschedule(tickEvent);
             break;
         case (int) SimpleEnergySM::MsgType::POWERON:
-            schedule(tickEvent, curTick() + 10);
+            schedule(tickEvent, curTick() + lat_poweron);
             break;
         default:
             rlt = 0;
     }
+    return rlt;
+}
+
+int
+AtomicSimpleCPU::virtualInterrupt(Tick tick)
+{
+    int rlt = 1;
+    Tick time = tickEvent.when();
+    if (tick % clockPeriod())
+        tick += clockPeriod() - tick % clockPeriod();
+    time += tick;
+    reschedule(tickEvent, time);
     return rlt;
 }
 
