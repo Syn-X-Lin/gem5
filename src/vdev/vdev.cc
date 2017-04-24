@@ -16,7 +16,7 @@ VirtualDevice::VirtualDevice(const Params *p)
 
 void VirtualDevice::init()
 {
-
+    cpu->registerVDev(delay_set);
 }
 
 void VirtualDevice::triggerInterrupt()

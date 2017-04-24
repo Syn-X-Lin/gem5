@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include "mem/mem_object.hh"
+#include "cpu/base.hh"
 #include "params/VirtualDevice.hh"
 
 class VirtualDevice : public MemObject
@@ -26,7 +27,7 @@ public:
     Tick access(PacketPtr pkt);
     virtual int handleMsg(const EnergyMsg &msg);
 protected:
-    SimObject *cpu;
+    BaseCPU *cpu;
     std::vector<std::string> trace;
     Tick delay_set;
     Tick delay_self;

@@ -66,6 +66,8 @@
 #include "sim/system.hh"
 #include "debug/Mwait.hh"
 
+#include <vector>
+
 class BaseCPU;
 struct BaseCPUParams;
 class CheckerCPU;
@@ -148,6 +150,9 @@ class BaseCPU : public MemObject
 
     /** Cache the cache line size that we get from the system */
     const unsigned int _cacheLineSize;
+
+    /** Latencies of virtual devices when the system recovers. */
+    std::vector<Tick> lat_vdev;
 
   public:
 
@@ -563,6 +568,9 @@ class BaseCPU : public MemObject
     void mwaitAtomic(ThreadContext *tc, TheISA::TLB *dtb);
     AddressMonitor *getCpuAddrMonitor() { return &addressMonitor; }
     void atomicNotify(Addr address);
+
+  public:
+    int registerVDev(Tick lat);
 };
 
 #endif // THE_ISA == NULL_ISA

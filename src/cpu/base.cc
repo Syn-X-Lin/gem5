@@ -255,6 +255,8 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
         fatal("Number of ISAs (%i) assigned to the CPU does not equal number "
               "of threads (%i).\n", params()->isa.size(), numThreads);
     }
+
+    lat_vdev.resize(0);
 }
 
 void
@@ -739,4 +741,11 @@ BaseCPU::traceFunctionsInternal(Addr pc)
                  curTick() - functionEntryTick, curTick(), sym_str);
         functionEntryTick = curTick();
     }
+}
+
+int
+BaseCPU::registerVDev(Tick tick)
+{
+    lat_vdev.push_back(tick);
+    return 1;
 }
