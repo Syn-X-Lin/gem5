@@ -27,7 +27,7 @@ void VirtualDevice::init()
 void VirtualDevice::triggerInterrupt()
 {
     /* Todo: add static of finish success. */
-    finish_success();
+    finishSuccess();
     assert(is_intask);
     is_intask = 0;
     cpu->virtualInterrupt(delay_cpu_interrupt);
