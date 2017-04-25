@@ -5,9 +5,11 @@
 #include "vdev/vdev.hh"
 #include "engy/state_machine.hh"
 #include "debug/EnergyMgmt.hh"
+#include "debug/VirtualDevice.hh"
 
 VirtualDevice::VirtualDevice(const Params *p)
     : MemObject(p), cpu(p->cpu),
+      range(p->range),
       delay_set(p->delay_set),
       delay_self(p->delay_self),
       delay_cpu_interrupt(p->delay_cpu_interrupt),
@@ -22,6 +24,8 @@ VirtualDevice::VirtualDevice(const Params *p)
 void VirtualDevice::init()
 {
     cpu->registerVDev(delay_set);
+    DPRINTF(VirtualDevice, "Virtual Device started with range: %#lx - %#lx\n",
+            range.start(), range.end());
 }
 
 void VirtualDevice::triggerInterrupt()
