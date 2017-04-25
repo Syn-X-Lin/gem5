@@ -646,7 +646,7 @@ AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
 {
     int rlt = 1;
     Tick lat = 0;
-    DPRINTF(EnergyMgmt, "handleMsg called at %lu, msg.type=%d\n", curTick(), msg.type);
+    DPRINTF(EnergyMgmt, "AtomicSimpleCPU handleMsg called at %lu, msg.type=%d\n", curTick(), msg.type);
     switch(msg.type){
         case (int) SimpleEnergySM::MsgType::POWEROFF:
             lat = tickEvent.when() - curTick();
@@ -657,7 +657,9 @@ AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
             deschedule(tickEvent);
             break;
         case (int) SimpleEnergySM::MsgType::POWERON:
-            schedule(tickEvent, curTick() + lat_poweron);
+            // lat_poweron is the latency in case of the cpu is in a virtual interrupt when power on
+            // getTotalLat() function gets the total latency that is used to recover all the virtual devices
+            schedule(tickEvent, curTick() + lat_poweron + BaseCPU::getTotalLat());
             break;
         default:
             rlt = 0;

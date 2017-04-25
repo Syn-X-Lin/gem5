@@ -749,3 +749,13 @@ BaseCPU::registerVDev(Tick tick)
     lat_vdev.push_back(tick);
     return 1;
 }
+
+Tick
+BaseCPU::getTotalLat()
+{
+    Tick total = 0;
+    for (auto iter = lat_vdev.cbegin(); iter != lat_vdev.cend(); iter++) {
+        total += (*iter);
+    }
+    return total;
+}

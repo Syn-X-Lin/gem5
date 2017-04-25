@@ -28,12 +28,23 @@ public:
     virtual int handleMsg(const EnergyMsg &msg);
 protected:
     BaseCPU *cpu;
+    /* Trace of the vdev, used to determine whether a task has succeeded **/
     std::vector<std::string> trace;
+    /* The delay for the CPU to set the vdev **/
     Tick delay_set;
+    /* The delay for the vdev to finish its task **/
     Tick delay_self;
+    /* The delay for the CPU to handle the interrupt caused by the vdev **/
     Tick delay_cpu_interrupt;
+    /* Whether the tasks of the vdev is interruptable **/
+    bool is_interruptable;
+    /* When power off, time is remained for the task **/
+    Tick delay_remained;
+    /* Whether the device is in a task **/
+    bool is_intask;
     EventWrapper<VirtualDevice, &VirtualDevice::triggerInterrupt> event_interrupt;
-    virtual bool finish_success();
+    /*Tell whether the task is successful **/
+    virtual bool finishSuccess();
 };
 
 #endif //GEM5_VDEV_HH

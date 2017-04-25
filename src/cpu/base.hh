@@ -570,7 +570,10 @@ class BaseCPU : public MemObject
     void atomicNotify(Addr address);
 
   public:
+    // Register a latency of device
     int registerVDev(Tick lat);
+    // Get total latency of devices
+    Tick getTotalLat();
 };
 
 #endif // THE_ISA == NULL_ISA
