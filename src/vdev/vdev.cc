@@ -90,7 +90,7 @@ VirtualDevice::triggerInterrupt()
     finishSuccess();
     assert(is_intask);
     is_intask = 0;
-    cpu->virtualInterrupt(delay_cpu_interrupt);
+    cpu->virtualDeviceInterrupt(delay_cpu_interrupt);
 }
 
 Tick

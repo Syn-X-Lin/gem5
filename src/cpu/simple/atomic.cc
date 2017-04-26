@@ -668,7 +668,7 @@ AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
 }
 
 int
-AtomicSimpleCPU::virtualInterrupt(Tick tick)
+AtomicSimpleCPU::virtualDeviceInterrupt(Tick tick)
 {
     int rlt = 1;
     Tick time = tickEvent.when();

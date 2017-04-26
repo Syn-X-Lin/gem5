@@ -184,7 +184,7 @@ class SimObject : public EventManager, public Serializable, public Drainable, pu
     /**
      * Handle virtual interrupt triggered by virtual device
      */
-     virtual int virtualInterrupt(Tick tick) { return 1; }
+     virtual int virtualDeviceInterrupt(Tick tick) { return 1; }
 #ifdef DEBUG
   public:
     bool doDebugBreak;

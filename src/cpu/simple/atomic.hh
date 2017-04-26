@@ -220,7 +220,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
     virtual int handleMsg(const EnergyMsg &msg);
 
-    virtual int virtualInterrupt(Tick tick);
+    virtual int virtualDeviceInterrupt(Tick tick);
 };
 
 #endif // __CPU_SIMPLE_ATOMIC_HH__
