@@ -7,8 +7,56 @@
 #include "debug/EnergyMgmt.hh"
 #include "debug/VirtualDevice.hh"
 
+VirtualDevice::DevicePort::DevicePort(const std::string &_name,
+                                      VirtualDevice *_vdev)
+    : SlavePort(_name, _vdev), vdev(_vdev)
+{
+
+}
+
+Tick
+VirtualDevice::DevicePort::recvAtomic(PacketPtr pkt)
+{
+    assert(vdev);
+    return vdev->recvAtomic(pkt);
+}
+
+void
+VirtualDevice::DevicePort::recvFunctional(PacketPtr pkt)
+{
+    assert(vdev);
+    vdev->recvFunctional(pkt);
+}
+
+bool
+VirtualDevice::DevicePort::recvTimingReq(PacketPtr pkt)
+{
+    assert(vdev);
+    return vdev->recvTimingReq(pkt);
+}
+
+void
+VirtualDevice::DevicePort::recvRespRetry()
+{
+    assert(vdev);
+    vdev->recvRespRetry();
+}
+
+AddrRangeList
+VirtualDevice::DevicePort::getAddrRanges() const
+{
+    assert(vdev);
+
+    AddrRangeList rangeList;
+    rangeList.push_back(vdev->getAddrRange());
+
+    return rangeList;
+}
+
 VirtualDevice::VirtualDevice(const Params *p)
-    : MemObject(p), cpu(p->cpu),
+    : MemObject(p),
+      port(name() + ".port", this),
+      cpu(p->cpu),
       range(p->range),
       delay_set(p->delay_set),
       delay_self(p->delay_self),
@@ -21,14 +69,22 @@ VirtualDevice::VirtualDevice(const Params *p)
     trace.resize(0);
 }
 
-void VirtualDevice::init()
+void
+VirtualDevice::init()
 {
+    MemObject::init();
+
+    if (port.isConnected()) {
+        port.sendRangeChange();
+    }
+
     cpu->registerVDev(delay_set);
     DPRINTF(VirtualDevice, "Virtual Device started with range: %#lx - %#lx\n",
             range.start(), range.end());
 }
 
-void VirtualDevice::triggerInterrupt()
+void
+VirtualDevice::triggerInterrupt()
 {
     /* Todo: add static of finish success. */
     finishSuccess();
@@ -37,7 +93,8 @@ void VirtualDevice::triggerInterrupt()
     cpu->virtualInterrupt(delay_cpu_interrupt);
 }
 
-Tick VirtualDevice::access(PacketPtr pkt)
+Tick
+VirtualDevice::access(PacketPtr pkt)
 {
     /* Todo: what if the cpu ask to work on a task when the vdev is busy? **/
     assert(!is_intask);
@@ -46,7 +103,8 @@ Tick VirtualDevice::access(PacketPtr pkt)
     return delay_set;
 }
 
-int VirtualDevice::handleMsg(const EnergyMsg &msg)
+int
+VirtualDevice::handleMsg(const EnergyMsg &msg)
 {
     DPRINTF(EnergyMgmt, "Device handleMsg called at %lu, msg.type=%d\n", curTick(), msg.type);
     switch(msg.type) {
@@ -76,7 +134,48 @@ int VirtualDevice::handleMsg(const EnergyMsg &msg)
     return 1;
 }
 
-bool VirtualDevice::finishSuccess()
+BaseSlavePort&
+VirtualDevice::getSlavePort(const std::string &if_name, PortID idx)
+{
+    if (if_name == "port") {
+        return port;
+    } else {
+        return MemObject::getSlavePort(if_name, idx);
+    }
+}
+
+AddrRange
+VirtualDevice::getAddrRange() const
+{
+    return range;
+}
+
+Tick
+VirtualDevice::recvAtomic(PacketPtr pkt)
+{
+    return access(pkt);
+}
+
+void
+VirtualDevice::recvFunctional(PacketPtr pkt)
+{
+    fatal("Functional access is not supported now.");
+}
+
+bool
+VirtualDevice::recvTimingReq(PacketPtr pkt)
+{
+    fatal("Timing access is not supported now.");
+}
+
+void
+VirtualDevice::recvRespRetry()
+{
+    fatal("Timing access is not supported now.");
+}
+
+bool
+VirtualDevice::finishSuccess()
 {
     /* Todo: Need further implementation. */
     return 1;

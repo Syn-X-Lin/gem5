@@ -13,7 +13,29 @@
 
 class VirtualDevice : public MemObject
 {
+private:
+
+    class DevicePort : public SlavePort
+    {
+    private:
+        VirtualDevice* vdev;
+
+    public:
+        DevicePort(const std::string& _name, VirtualDevice* _vdev);
+
+    protected:
+        Tick recvAtomic(PacketPtr pkt);
+        void recvFunctional(PacketPtr pkt);
+        bool recvTimingReq(PacketPtr pkt);
+        void recvRespRetry();
+        AddrRangeList getAddrRanges() const;
+
+    };
+
+    DevicePort port;
+
 public:
+
     typedef VirtualDeviceParams Params;
     const Params *params() const
     {
@@ -23,10 +45,26 @@ public:
     virtual ~VirtualDevice() {}
     virtual void init();
 
+    /** Method to trigger an interrupt after task finishes. */
     void triggerInterrupt();
+    /** Simple method to access data. */
     Tick access(PacketPtr pkt);
+    /** Handle energy state changes. */
     virtual int handleMsg(const EnergyMsg &msg);
+    /** Method for python scripts to get port. */
+    BaseSlavePort& getSlavePort(const std::string& if_name,
+                                PortID idx = InvalidPortID);
+    /** Method to get addr range. */
+    AddrRange getAddrRange() const;
+
+    /** Methods to handle packet. */
+    Tick recvAtomic(PacketPtr pkt);
+    void recvFunctional(PacketPtr pkt);
+    bool recvTimingReq(PacketPtr pkt);
+    void recvRespRetry();
+
 protected:
+
     BaseCPU *cpu;
     /** Address range of the virtual device*/
     AddrRange range;
@@ -47,6 +85,7 @@ protected:
     EventWrapper<VirtualDevice, &VirtualDevice::triggerInterrupt> event_interrupt;
     /**Tell whether the task is successful */
     virtual bool finishSuccess();
+
 };
 
 #endif //GEM5_VDEV_HH
