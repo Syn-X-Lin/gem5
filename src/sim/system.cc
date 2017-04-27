@@ -96,7 +96,10 @@ System::System(Params *p)
       numWorkIds(p->num_work_ids),
       _params(p),
       totalNumInsts(0),
-      instEventQueue("system instruction-based event queue")
+      instEventQueue("system instruction-based event queue"),
+      vdev_ranges(p->vdev_ranges),
+      has_vdev(p->has_vdev),
+      vaddr_vdev_ranges(p->vaddr_vdev_ranges)
 {
     // add self to global system list
     systemList.push_back(this);
@@ -484,6 +487,35 @@ System::getMasterName(MasterID master_id)
         fatal("Invalid master_id passed to getMasterName()\n");
 
     return masterIds[master_id];
+}
+
+bool
+System::isVAddrOfVdev(Addr addr)
+{
+    for (auto iter = vaddr_vdev_ranges.cbegin();
+        iter != vaddr_vdev_ranges.cend(); iter++) {
+        if (iter->contains(addr)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+Addr
+System::allocVdevPages(Addr vaddr, int64_t& size)
+{
+    auto iter_v = vaddr_vdev_ranges.cbegin();
+    auto iter_p = vdev_ranges.cbegin();
+    for (;
+            iter_v != vaddr_vdev_ranges.cend(), iter_p != vdev_ranges.cend();
+            iter_v++, iter_p++) {
+        if (iter_v->contains(vaddr)) {
+            Addr paddr = iter_p->start();
+            size = iter_p->size();
+            return paddr;
+        }
+    }
+    fatal("Cannot find virtual devices assigned with giver virtual address!\n");
 }
 
 System *

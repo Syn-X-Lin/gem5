@@ -71,6 +71,12 @@ class System(MemObject):
     # I/O bridge or cache
     mem_ranges = VectorParam.AddrRange([], "Ranges that constitute main memory")
 
+    # Virtual Device Address Ranges
+    has_vdev = Param.Bool(False, "Whether the system has virtual devices")
+    vdev_ranges = VectorParam.AddrRange([], "Ranges that constitute virtual devices")
+    vaddr_vdev_ranges = VectorParam.AddrRange([],
+        "Virtual addresses that should be mapped to virtual devices")
+
     cache_line_size = Param.Unsigned(64, "Cache line size in bytes")
 
     work_item_id = Param.Int(-1, "specific work item id")

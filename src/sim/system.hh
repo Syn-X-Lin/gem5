@@ -564,6 +564,15 @@ class System : public MemObject
     virtual void unserializeSymtab(Checkpoint *cp,
                                    const std::string &section) {}
 
+  public:
+
+    std::vector<AddrRange> vdev_ranges;
+    bool has_vdev;
+    std::vector<AddrRange> vaddr_vdev_ranges;
+
+    bool isVAddrOfVdev(Addr addr);
+    Addr allocVdevPages(Addr vaddr, int64_t& size);
+
 };
 
 void printSystems();
