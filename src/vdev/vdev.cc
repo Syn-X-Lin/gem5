@@ -63,10 +63,11 @@ VirtualDevice::VirtualDevice(const Params *p)
       delay_cpu_interrupt(p->delay_cpu_interrupt),
       is_interruptable(p->is_interruptable),
       delay_remained(0),
-      is_intask(0),
       event_interrupt(this, false, Event::Virtual_Interrupt)
 {
     trace.resize(0);
+    pmem = (uint8_t*) malloc(range.size() * sizeof(uint8_t));
+    memset(pmem, 0, range.size() * sizeof(uint8_t));
 }
 
 void
@@ -88,8 +89,12 @@ VirtualDevice::triggerInterrupt()
 {
     /* Todo: add static of finish success. */
     finishSuccess();
-    assert(is_intask);
-    is_intask = 0;
+    assert(*pmem & VDEV_WORK);
+    /* Change register byte. */
+    *pmem |= VDEV_FINISH;
+    *pmem &= ~VDEV_WORK;
+
+    /* Tell cpu. */
     cpu->virtualDeviceInterrupt(delay_cpu_interrupt);
 }
 
@@ -97,10 +102,42 @@ Tick
 VirtualDevice::access(PacketPtr pkt)
 {
     /* Todo: what if the cpu ask to work on a task when the vdev is busy? **/
-    assert(!is_intask);
-    is_intask = 1;
-    schedule(event_interrupt, curTick() + delay_self);
-    return delay_set;
+    DPRINTF(VirtualDevice, "Virtual Device accessed at %#lx.\n", pkt->getAddr());
+    Addr offset = pkt->getAddr() - range.start();
+    if (pkt->isRead()) {
+        memcpy(pkt->getPtr<uint8_t>(), pmem+offset, pkt->getSize());
+        return 0;
+    } else if (pkt->isWrite()) {
+        const uint8_t* pkt_addr = pkt->getConstPtr<uint8_t>();
+        if (offset == 0) {
+            /* Might be a request. */
+            if (*pkt_addr & VDEV_SET) {
+                /* Request */
+                if (*pmem & VDEV_WORK) {
+                    /* Request fails because the vdev is working. */
+                    DPRINTF(VirtualDevice, "Request discarded!\n");
+                    return 0;
+                } else {
+                    /* Request succeeds. */
+                    DPRINTF(VirtualDevice, "Virtual Device starts working.\n");
+                    /* Set the virtual device to working mode */
+                    *pmem |= VDEV_WORK;
+                    *pmem &= ~VDEV_FINISH;
+                    /* Schedule interrupt. */
+                    schedule(event_interrupt, curTick() + delay_self);
+                    return delay_set;
+                }
+            } else {
+                /* Not a request, but the first byte cannot be written. */
+                return 0;
+            }
+        } else {
+            /* Normal write. */
+            memcpy(pmem+offset, pkt_addr, pkt->getSize());
+            return 0;
+        }
+    }
+    return 0;
 }
 
 int
@@ -109,7 +146,7 @@ VirtualDevice::handleMsg(const EnergyMsg &msg)
     DPRINTF(EnergyMgmt, "Device handleMsg called at %lu, msg.type=%d\n", curTick(), msg.type);
     switch(msg.type) {
         case (int) SimpleEnergySM::POWEROFF:
-            if (is_intask) {
+            if (*pmem & VDEV_WORK) {
                 /* This should be handled if the device is on a task **/
                 assert(event_interrupt.scheduled());
                 DPRINTF(EnergyMgmt, "device power off occurs in the middle of a task at %lu\n", curTick());
@@ -118,7 +155,7 @@ VirtualDevice::handleMsg(const EnergyMsg &msg)
             }
             break;
         case (int) SimpleEnergySM::POWERON:
-            if (is_intask) {
+            if (*pmem & VDEV_WORK) {
                 assert(!event_interrupt.scheduled());
                 DPRINTF(EnergyMgmt, "device power on to finish a task at %lu\n", curTick());
                 if (is_interruptable) {

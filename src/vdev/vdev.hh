@@ -45,6 +45,12 @@ public:
     virtual ~VirtualDevice() {}
     virtual void init();
 
+    /** Flags for the first byte in the memory. */
+    static const uint8_t VDEV_SET =     0x01;
+    static const uint8_t VDEV_WORK =    0x02;
+    static const uint8_t VDEV_FINISH =  0x04;
+    static const uint8_t VDEV_CORRECT = 0x08;
+
     /** Method to trigger an interrupt after task finishes. */
     void triggerInterrupt();
     /** Simple method to access data. */
@@ -80,11 +86,15 @@ protected:
     bool is_interruptable;
     /** When power off, time is remained for the task */
     Tick delay_remained;
-    /** Whether the device is in a task */
-    bool is_intask;
+
     EventWrapper<VirtualDevice, &VirtualDevice::triggerInterrupt> event_interrupt;
-    /**Tell whether the task is successful */
+    /** Tell whether the task is successful */
     virtual bool finishSuccess();
+    /** Implement of memories and registers for the vdev.
+     * first byte of the range:
+     * |-high-----------------------low-|
+     * |-4 bits-|correct|finish|work|set| */
+    uint8_t *pmem;
 
 };
 

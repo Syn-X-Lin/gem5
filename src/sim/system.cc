@@ -54,6 +54,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
 #include "debug/WorkItems.hh"
+#include "debug/VirtualDevice.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/physical.hh"
 #include "params/System.hh"
@@ -182,6 +183,14 @@ System::init()
     // check that the system port is connected
     if (!_systemPort.isConnected())
         panic("System port on %s is not connected.\n", name());
+
+    // Debug output for virtual device
+    for(auto iter = vaddr_vdev_ranges.cbegin();
+        iter != vaddr_vdev_ranges.cend(); iter++) {
+        DPRINTF(VirtualDevice, "VDev vaddr registered at %#lx - %#lx.\n",
+                iter->start(), iter->end());
+    }
+
 }
 
 BaseMasterPort&
@@ -515,7 +524,7 @@ System::allocVdevPages(Addr vaddr, int64_t& size)
             return paddr;
         }
     }
-    fatal("Cannot find virtual devices assigned with giver virtual address!\n");
+    fatal("Cannot find virtual devices assigned with given virtual address!\n");
 }
 
 System *
