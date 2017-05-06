@@ -114,6 +114,7 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
       icachePort(name() + ".icache_port", this),
       dcachePort(name() + ".dcache_port", this),
       fastmem(p->fastmem), dcache_access(false), dcache_latency(0),
+      vdev_set(false), vdev_set_latency(0),
       ppCommit(nullptr)
 {
     _status = Idle;
@@ -147,7 +148,7 @@ AtomicSimpleCPU::drain(DrainManager *dm)
         return 0;
     }
 }
-
+27142000000
 void
 AtomicSimpleCPU::drainResume()
 {
@@ -602,6 +603,11 @@ AtomicSimpleCPU::tick()
             if (simulate_data_stalls && dcache_access)
                 stall_ticks += dcache_latency;
 
+            if (vdev_set) {
+                vdev_set = 0;
+                stall_ticks += vdev_set_latency;
+            }
+
             if (stall_ticks) {
                 // the atomic cpu does its accounting in ticks, so
                 // keep counting in ticks but round to the clock
@@ -668,7 +674,7 @@ AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
 }
 
 int
-AtomicSimpleCPU::virtualDeviceInterrupt(Tick tick)
+AtomicSimpleCPU::virtualDeviceDelay(Tick tick)
 {
     int rlt = 1;
     Tick time = tickEvent.when();
@@ -676,6 +682,20 @@ AtomicSimpleCPU::virtualDeviceInterrupt(Tick tick)
         tick += clockPeriod() - tick % clockPeriod();
     time += tick;
     reschedule(tickEvent, time);
+    return rlt;
+}
+
+int
+AtomicSimpleCPU::virtualDeviceInterrupt(Tick tick)
+{
+    return virtualDeviceDelay(tick);
+}
+
+int AtomicSimpleCPU::virtualDeviceSet(Tick tick)
+{
+    int rlt = 1;
+    vdev_set = 0;
+    vdev_set_latency = tick;
     return rlt;
 }
 

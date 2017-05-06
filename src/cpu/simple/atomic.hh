@@ -181,6 +181,9 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     bool dcache_access;
     Tick dcache_latency;
 
+    bool vdev_set;
+    Tick vdev_set_latency;
+
     /** Probe Points. */
     ProbePointArg<std::pair<SimpleThread*, const StaticInstPtr>> *ppCommit;
 
@@ -221,6 +224,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     virtual int handleMsg(const EnergyMsg &msg);
 
     virtual int virtualDeviceInterrupt(Tick tick);
+    virtual int virtualDeviceDelay(Tick tick);
+    virtual int virtualDeviceSet(Tick tick);
 };
 
 #endif // __CPU_SIMPLE_ATOMIC_HH__

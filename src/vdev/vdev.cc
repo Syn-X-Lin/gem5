@@ -6,6 +6,7 @@
 #include "engy/state_machine.hh"
 #include "debug/EnergyMgmt.hh"
 #include "debug/VirtualDevice.hh"
+#include "debug/MemoryAccess.hh"
 
 VirtualDevice::DevicePort::DevicePort(const std::string &_name,
                                       VirtualDevice *_vdev)
@@ -88,6 +89,7 @@ void
 VirtualDevice::triggerInterrupt()
 {
     /* Todo: add static of finish success. */
+    DPRINTF(VirtualDevice, "Virtual device triggers an interrupt.\n");
     finishSuccess();
     assert(*pmem & VDEV_WORK);
     /* Change register byte. */
@@ -102,11 +104,10 @@ Tick
 VirtualDevice::access(PacketPtr pkt)
 {
     /* Todo: what if the cpu ask to work on a task when the vdev is busy? **/
-    DPRINTF(VirtualDevice, "Virtual Device accessed at %#lx.\n", pkt->getAddr());
+    DPRINTF(MemoryAccess, "Virtual Device accessed at %#lx.\n", pkt->getAddr());
     Addr offset = pkt->getAddr() - range.start();
     if (pkt->isRead()) {
         memcpy(pkt->getPtr<uint8_t>(), pmem+offset, pkt->getSize());
-        return 0;
     } else if (pkt->isWrite()) {
         const uint8_t* pkt_addr = pkt->getConstPtr<uint8_t>();
         if (offset == 0) {
@@ -116,7 +117,6 @@ VirtualDevice::access(PacketPtr pkt)
                 if (*pmem & VDEV_WORK) {
                     /* Request fails because the vdev is working. */
                     DPRINTF(VirtualDevice, "Request discarded!\n");
-                    return 0;
                 } else {
                     /* Request succeeds. */
                     DPRINTF(VirtualDevice, "Virtual Device starts working.\n");
@@ -124,17 +124,15 @@ VirtualDevice::access(PacketPtr pkt)
                     *pmem |= VDEV_WORK;
                     *pmem &= ~VDEV_FINISH;
                     /* Schedule interrupt. */
-                    schedule(event_interrupt, curTick() + delay_self);
-                    return delay_set;
+                    schedule(event_interrupt, curTick() + delay_set + delay_self);
+                    cpu->virtualDeviceSet(delay_set);
                 }
             } else {
                 /* Not a request, but the first byte cannot be written. */
-                return 0;
             }
         } else {
             /* Normal write. */
             memcpy(pmem+offset, pkt_addr, pkt->getSize());
-            return 0;
         }
     }
     return 0;
