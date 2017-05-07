@@ -153,6 +153,8 @@ class BaseCPU : public MemObject
 
     /** Latencies of virtual devices when the system recovers. */
     std::vector<Tick> lat_vdev;
+    /** Whether the virtual device is working or not. */
+    std::vector<bool> status_vdev;
 
   public:
 
@@ -571,9 +573,12 @@ class BaseCPU : public MemObject
 
   public:
     // Register a latency of device
-    int registerVDev(Tick lat);
+    int registerVDev(Tick lat, uint32_t &id);
     // Get total latency of devices
     Tick getTotalLat();
+    virtual int virtualDeviceStart(uint32_t id);
+    virtual int virtualDeviceEnd(uint32_t id);
+
 };
 
 #endif // THE_ISA == NULL_ISA

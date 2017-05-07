@@ -13,6 +13,10 @@
 
 class VirtualDevice : public MemObject
 {
+protected:
+    /** Id of the virtual device */
+    uint32_t id;
+
 private:
 
     class DevicePort : public SlavePort
@@ -76,10 +80,12 @@ protected:
     AddrRange range;
     /** Trace of the vdev, used to determine whether a task has succeeded */
     std::vector<std::string> trace;
-    /** The delay for the CPU to set the vdev **/
+    /** The delay for the CPU to set the vdev */
     Tick delay_set;
-    /** The delay for the vdev to finish its task **/
+    /** The delay for the vdev to finish its task */
     Tick delay_self;
+    /** Time that the cpu spend to recover the device after a power failure */
+    Tick delay_recover;
     /** The delay for the CPU to handle the interrupt caused by the vdev */
     Tick delay_cpu_interrupt;
     /** Whether the tasks of the vdev is interruptable */

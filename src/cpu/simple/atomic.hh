@@ -226,6 +226,10 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     virtual int virtualDeviceInterrupt(Tick tick);
     virtual int virtualDeviceDelay(Tick tick);
     virtual int virtualDeviceSet(Tick tick);
+
+    double energy_consumed_per_cycle;
+
+    bool in_interrupt;
 };
 
 #endif // __CPU_SIMPLE_ATOMIC_HH__

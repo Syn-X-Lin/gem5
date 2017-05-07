@@ -115,7 +115,8 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
       dcachePort(name() + ".dcache_port", this),
       fastmem(p->fastmem), dcache_access(false), dcache_latency(0),
       vdev_set(false), vdev_set_latency(0),
-      ppCommit(nullptr)
+      ppCommit(nullptr), energy_consumed_per_cycle(1),
+      in_interrupt(0)
 {
     _status = Idle;
     lat_poweron = 0;
@@ -148,7 +149,7 @@ AtomicSimpleCPU::drain(DrainManager *dm)
         return 0;
     }
 }
-27142000000
+
 void
 AtomicSimpleCPU::drainResume()
 {
@@ -512,7 +513,7 @@ AtomicSimpleCPU::tick()
 {
     DPRINTF(SimpleCPU, "Tick\n");
 
-    consumeEnergy(1);
+    in_interrupt = 0;
 
     Tick latency = 0;
 
@@ -628,6 +629,8 @@ AtomicSimpleCPU::tick()
     if (latency < clockPeriod())
         latency = clockPeriod();
 
+    consumeEnergy(energy_consumed_per_cycle * ticksToCycles(latency));
+
     if (_status != Idle)
         schedule(tickEvent, curTick() + latency);
 }
@@ -656,15 +659,23 @@ AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
     switch(msg.type){
         case (int) SimpleEnergySM::MsgType::POWEROFF:
             lat = tickEvent.when() - curTick();
+            if (in_interrupt)
+                lat_poweron = lat + clockPeriod() - lat % clockPeriod();
+            else
+                lat_poweron = 0;
+            /*
             if (lat <= clockPeriod())
                 lat_poweron = 0;
             else
                 lat_poweron = lat + clockPeriod() - lat % clockPeriod();
+                */
             deschedule(tickEvent);
             break;
         case (int) SimpleEnergySM::MsgType::POWERON:
             // lat_poweron is the latency in case of the cpu is in a virtual interrupt when power on
             // getTotalLat() function gets the total latency that is used to recover all the virtual devices
+            consumeEnergy(energy_consumed_per_cycle * ticksToCycles(lat_poweron + BaseCPU::getTotalLat()));
+            DPRINTF(EnergyMgmt, "haha lat_poweron = %lu\n", lat_poweron);
             schedule(tickEvent, curTick() + lat_poweron + BaseCPU::getTotalLat());
             break;
         default:
@@ -688,6 +699,7 @@ AtomicSimpleCPU::virtualDeviceDelay(Tick tick)
 int
 AtomicSimpleCPU::virtualDeviceInterrupt(Tick tick)
 {
+    in_interrupt = 1;
     return virtualDeviceDelay(tick);
 }
 

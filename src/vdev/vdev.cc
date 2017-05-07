@@ -56,14 +56,16 @@ VirtualDevice::DevicePort::getAddrRanges() const
 
 VirtualDevice::VirtualDevice(const Params *p)
     : MemObject(p),
+      id(0),
       port(name() + ".port", this),
       cpu(p->cpu),
       range(p->range),
       delay_set(p->delay_set),
       delay_self(p->delay_self),
+      delay_recover(p->delay_recover),
       delay_cpu_interrupt(p->delay_cpu_interrupt),
       is_interruptable(p->is_interruptable),
-      delay_remained(0),
+      delay_remained(p->delay_remained),
       event_interrupt(this, false, Event::Virtual_Interrupt)
 {
     trace.resize(0);
@@ -80,7 +82,7 @@ VirtualDevice::init()
         port.sendRangeChange();
     }
 
-    cpu->registerVDev(delay_set);
+    cpu->registerVDev(delay_recover, id);
     DPRINTF(VirtualDevice, "Virtual Device started with range: %#lx - %#lx\n",
             range.start(), range.end());
 }
@@ -98,6 +100,7 @@ VirtualDevice::triggerInterrupt()
 
     /* Tell cpu. */
     cpu->virtualDeviceInterrupt(delay_cpu_interrupt);
+    cpu->virtualDeviceEnd(id);
 }
 
 Tick
@@ -126,6 +129,7 @@ VirtualDevice::access(PacketPtr pkt)
                     /* Schedule interrupt. */
                     schedule(event_interrupt, curTick() + delay_set + delay_self);
                     cpu->virtualDeviceSet(delay_set);
+                    cpu->virtualDeviceStart(id);
                 }
             } else {
                 /* Not a request, but the first byte cannot be written. */
@@ -148,7 +152,9 @@ VirtualDevice::handleMsg(const EnergyMsg &msg)
                 /* This should be handled if the device is on a task **/
                 assert(event_interrupt.scheduled());
                 DPRINTF(EnergyMgmt, "device power off occurs in the middle of a task at %lu\n", curTick());
-                delay_remained = event_interrupt.when() - curTick();
+                /* Calculate the remaining delay if the device is interruptable */
+                if (is_interruptable)
+                    delay_remained = event_interrupt.when() - curTick();
                 deschedule(event_interrupt);
             }
             break;
@@ -156,11 +162,7 @@ VirtualDevice::handleMsg(const EnergyMsg &msg)
             if (*pmem & VDEV_WORK) {
                 assert(!event_interrupt.scheduled());
                 DPRINTF(EnergyMgmt, "device power on to finish a task at %lu\n", curTick());
-                if (is_interruptable) {
-                    schedule(event_interrupt, curTick() + delay_remained);
-                } else {
-                    schedule(event_interrupt, curTick() + delay_self);
-                }
+                schedule(event_interrupt, curTick() + delay_remained);
             }
             break;
         default:
