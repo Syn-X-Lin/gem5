@@ -657,7 +657,6 @@ AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
     Tick lat = 0;
     DPRINTF(EnergyMgmt, "AtomicSimpleCPU handleMsg called at %lu, msg.type=%d\n", curTick(), msg.type);
     switch(msg.type){
-<<<<<<< HEAD
         case (int) TwoThresSM::MsgType::POWEROFF:
             lat = tickEvent.when() - curTick();
             if (in_interrupt)
