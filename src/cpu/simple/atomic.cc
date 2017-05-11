@@ -60,7 +60,7 @@
 #include "sim/faults.hh"
 #include "sim/system.hh"
 #include "sim/full_system.hh"
-#include "engy/state_machine.hh"
+#include "engy/two_thres.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -657,23 +657,16 @@ AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
     Tick lat = 0;
     DPRINTF(EnergyMgmt, "AtomicSimpleCPU handleMsg called at %lu, msg.type=%d\n", curTick(), msg.type);
     switch(msg.type){
-        case (int) SimpleEnergySM::MsgType::POWEROFF:
+<<<<<<< HEAD
+        case (int) TwoThresSM::MsgType::POWEROFF:
             lat = tickEvent.when() - curTick();
             if (in_interrupt)
                 lat_poweron = lat + clockPeriod() - lat % clockPeriod();
             else
                 lat_poweron = 0;
-            /*
-            if (lat <= clockPeriod())
-                lat_poweron = 0;
-            else
-                lat_poweron = lat + clockPeriod() - lat % clockPeriod();
-                */
             deschedule(tickEvent);
             break;
-        case (int) SimpleEnergySM::MsgType::POWERON:
-            // lat_poweron is the latency in case of the cpu is in a virtual interrupt when power on
-            // getTotalLat() function gets the total latency that is used to recover all the virtual devices
+        case (int) TwoThresSM::MsgType::POWERON:
             consumeEnergy(energy_consumed_per_cycle * ticksToCycles(lat_poweron + BaseCPU::getTotalLat()));
             DPRINTF(EnergyMgmt, "haha lat_poweron = %lu\n", lat_poweron);
             schedule(tickEvent, curTick() + lat_poweron + BaseCPU::getTotalLat());
