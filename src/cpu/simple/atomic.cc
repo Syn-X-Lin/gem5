@@ -60,7 +60,7 @@
 #include "sim/faults.hh"
 #include "sim/system.hh"
 #include "sim/full_system.hh"
-#include "engy/two_thres.hh"
+#include "engy/state_machine.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -657,7 +657,7 @@ AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
     Tick lat = 0;
     DPRINTF(EnergyMgmt, "AtomicSimpleCPU handleMsg called at %lu, msg.type=%d\n", curTick(), msg.type);
     switch(msg.type){
-        case (int) TwoThresSM::MsgType::POWEROFF:
+        case (int) SimpleEnergySM::MsgType::POWEROFF:
             lat = tickEvent.when() - curTick();
             if (in_interrupt)
                 lat_poweron = lat + clockPeriod() - lat % clockPeriod();
@@ -665,9 +665,8 @@ AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
                 lat_poweron = 0;
             deschedule(tickEvent);
             break;
-        case (int) TwoThresSM::MsgType::POWERON:
+        case (int) SimpleEnergySM::MsgType::POWERON:
             consumeEnergy(energy_consumed_per_cycle * ticksToCycles(lat_poweron + BaseCPU::getTotalLat()));
-            DPRINTF(EnergyMgmt, "haha lat_poweron = %lu\n", lat_poweron);
             schedule(tickEvent, curTick() + lat_poweron + BaseCPU::getTotalLat());
             break;
         default:
