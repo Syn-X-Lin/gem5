@@ -13,6 +13,8 @@ system.vaddr_vdev_ranges = [AddrRange('1000MB', '1001MB')]
 
 system.energy_mgmt = EnergyMgmt(path_energy_profile = 'profile/energy_prof',
 				energy_time_unit = '10us')
+system.energy_mgmt.state_machine = TwoThresSM(thres_high = 20000, 
+						thres_low = 10000)
 
 system.cpu = AtomicSimpleCPU()
 system.cpu.s_energy_port = system.energy_mgmt.m_energy_port
@@ -42,7 +44,7 @@ system.vdev.port = system.membus.master
 system.vdev.s_energy_port = system.energy_mgmt.m_energy_port
 
 process = LiveProcess()
-process.cmd = ['tests/test-progs/test_mmap']
+process.cmd = ['tests/test-progs/vdev/bin/arm/linux/vdev']
 system.cpu.workload = process
 system.cpu.createThreads()
 
