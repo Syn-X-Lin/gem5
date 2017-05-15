@@ -60,7 +60,7 @@
 #include "sim/faults.hh"
 #include "sim/system.hh"
 #include "sim/full_system.hh"
-#include "engy/state_machine.hh"
+#include "engy/dynamic_freq.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -116,7 +116,8 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
       fastmem(p->fastmem), dcache_access(false), dcache_latency(0),
       vdev_set(false), vdev_set_latency(0),
       ppCommit(nullptr), energy_consumed_per_cycle(1),
-      in_interrupt(0)
+      in_interrupt(0), clock_high(p->freq_high),
+      clock_low(p->freq_low), clock_current(p->freq_low)
 {
     _status = Idle;
     lat_poweron = 0;
@@ -657,17 +658,29 @@ AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
     Tick lat = 0;
     DPRINTF(EnergyMgmt, "AtomicSimpleCPU handleMsg called at %lu, msg.type=%d\n", curTick(), msg.type);
     switch(msg.type){
-        case (int) SimpleEnergySM::MsgType::POWEROFF:
+        case (int) DynamicFreqSM::MsgType::POWEROFF:
             lat = tickEvent.when() - curTick();
             if (in_interrupt)
-                lat_poweron = lat + clockPeriod() - lat % clockPeriod();
+                lat_poweron = lat + clock_current - lat % clock_current;
             else
                 lat_poweron = 0;
             deschedule(tickEvent);
             break;
-        case (int) SimpleEnergySM::MsgType::POWERON:
+        case (int) DynamicFreqSM::MsgType::POWERON_HIGH:
             consumeEnergy(energy_consumed_per_cycle * ticksToCycles(lat_poweron + BaseCPU::getTotalLat()));
+            clock_current = clock_high;
             schedule(tickEvent, curTick() + lat_poweron + BaseCPU::getTotalLat());
+            break;
+        case (int) DynamicFreqSM::MsgType::POWERON_LOW:
+            consumeEnergy(energy_consumed_per_cycle * ticksToCycles(lat_poweron + BaseCPU::getTotalLat()));
+            clock_current = clock_low;
+            schedule(tickEvent, curTick() + lat_poweron + BaseCPU::getTotalLat());
+            break;
+        case (int) DynamicFreqSM::MsgType::CONVERT_HIGH2LOW:
+            clock_current = clock_low;
+            break;
+        case (int) DynamicFreqSM::MsgType::CONVERT_LOW2HIGH:
+            clock_current = clock_high;
             break;
         default:
             rlt = 0;

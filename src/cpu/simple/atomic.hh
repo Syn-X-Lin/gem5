@@ -230,6 +230,11 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     double energy_consumed_per_cycle;
 
     bool in_interrupt;
+
+protected:
+    Tick clock_high;
+    Tick clock_low;
+    Tick clock_current;
 };
 
 #endif // __CPU_SIMPLE_ATOMIC_HH__

@@ -41,6 +41,7 @@
 from m5.params import *
 from BaseSimpleCPU import BaseSimpleCPU
 from SimPoint import SimPoint
+from m5.proxy import *
 
 class AtomicSimpleCPU(BaseSimpleCPU):
     """Simple CPU model executing a configurable number of
@@ -49,6 +50,10 @@ class AtomicSimpleCPU(BaseSimpleCPU):
 
     type = 'AtomicSimpleCPU'
     cxx_header = "cpu/simple/atomic.hh"
+
+    freq_low = Param.Clock(Parent.freq_low, "low frequency")
+    freq_high = Param.Clock(Parent.freq_high, "high frequency")
+    energy_per_cycle = Param.Float(Parent.energy_per_cycle, "energy consumed per cycle")
 
     @classmethod
     def memory_mode(cls):
