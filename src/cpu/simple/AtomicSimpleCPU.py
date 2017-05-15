@@ -51,8 +51,8 @@ class AtomicSimpleCPU(BaseSimpleCPU):
     type = 'AtomicSimpleCPU'
     cxx_header = "cpu/simple/atomic.hh"
 
-    freq_low = Param.Clock(Parent.freq_low, "low frequency")
-    freq_high = Param.Clock(Parent.freq_high, "high frequency")
+    freq_low = Param.Frequency(Parent.freq_low, "low frequency")
+    freq_high = Param.Frequency(Parent.freq_high, "high frequency")
     energy_per_cycle = Param.Float(Parent.energy_per_cycle, "energy consumed per cycle")
 
     @classmethod
