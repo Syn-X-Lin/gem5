@@ -115,7 +115,7 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
       dcachePort(name() + ".dcache_port", this),
       fastmem(p->fastmem), dcache_access(false), dcache_latency(0),
       vdev_set(false), vdev_set_latency(0),
-      ppCommit(nullptr), energy_consumed_per_cycle(1),
+      ppCommit(nullptr), energy_consumed_per_cycle(p->energy_consumed_per_cycle),
       in_interrupt(0), clock_high(p->freq_high),
       clock_low(p->freq_low), clock_current(p->freq_low)
 {

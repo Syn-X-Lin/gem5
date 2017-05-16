@@ -53,7 +53,7 @@ class AtomicSimpleCPU(BaseSimpleCPU):
 
     freq_low = Param.Frequency(Parent.freq_low, "low frequency")
     freq_high = Param.Frequency(Parent.freq_high, "high frequency")
-    energy_per_cycle = Param.Float(Parent.energy_per_cycle, "energy consumed per cycle")
+    energy_consumed_per_cycle = Param.Float(Parent.energy_per_cycle, "energy consumed per cycle")
 
     @classmethod
     def memory_mode(cls):
