@@ -630,10 +630,10 @@ AtomicSimpleCPU::tick()
     if (latency < clockPeriod())
         latency = clockPeriod();
 
-    consumeEnergy(energy_consumed_per_cycle * ticksToCycles(latency));
+    consumeEnergy(energy_consumed_per_cycle);
 
     if (_status != Idle)
-        schedule(tickEvent, curTick() + latency);
+        schedule(tickEvent, curTick() + clock_current);
 }
 
 void
