@@ -235,6 +235,8 @@ protected:
     Tick clock_high;
     Tick clock_low;
     Tick clock_current;
+
+    int poweroff_panelty;
 };
 
 #endif // __CPU_SIMPLE_ATOMIC_HH__

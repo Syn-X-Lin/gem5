@@ -117,7 +117,8 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
       vdev_set(false), vdev_set_latency(0),
       ppCommit(nullptr), energy_consumed_per_cycle(p->energy_consumed_per_cycle),
       in_interrupt(0), clock_high(p->freq_high),
-      clock_low(p->freq_low), clock_current(p->freq_low)
+      clock_low(p->freq_low), clock_current(p->freq_low),
+      poweroff_panelty(p->poweroff_panelty)
 {
     _status = Idle;
     lat_poweron = 0;
@@ -664,6 +665,7 @@ AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
                 lat_poweron = lat + clock_current - lat % clock_current;
             else
                 lat_poweron = 0;
+            consumeEnergy(energy_consumed_per_cycle * poweroff_panelty);
             deschedule(tickEvent);
             break;
         case (int) DynamicFreqSM::MsgType::POWERON_HIGH:

@@ -10,8 +10,9 @@ system.mem_ranges = [AddrRange('512MB')]
 
 system.cpu = AtomicSimpleCPU()
 system.cpu.freq_high = "1MHz"
-system.cpu.freq_low = "500kHz"
+system.cpu.freq_low = "1MHz"
 system.cpu.energy_consumed_per_cycle = 1.5
+system.cpu.poweroff_panelty = 5000
 
 system.energy_mgmt = EnergyMgmt(path_energy_profile = 'profile/energy_prof',
                                 energy_time_unit = '10us')

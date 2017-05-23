@@ -6,7 +6,10 @@
 
 double SimpleHarvest::energy_harvest(double energy_harvested, double energy_remained)
 {
-    return energy_remained + energy_harvested;
+    if (energy_remained < 50000)
+        return energy_remained + energy_harvested;
+    else
+        return energy_remained;
 }
 
 void SimpleHarvest::init()
