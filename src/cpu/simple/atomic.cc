@@ -53,6 +53,7 @@
 #include "debug/ExecFaulting.hh"
 #include "debug/SimpleCPU.hh"
 #include "debug/EnergyMgmt.hh"
+#include "debug/VirtualDevice.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "mem/physical.hh"
@@ -697,8 +698,9 @@ AtomicSimpleCPU::virtualDeviceInterrupt(Tick tick)
 int AtomicSimpleCPU::virtualDeviceSet(Tick tick)
 {
     int rlt = 1;
-    vdev_set = 0;
+    vdev_set = 1;
     vdev_set_latency = tick;
+    DPRINTF(VirtualDevice, "AtomicCPU virtualDeviceSet vdev_set_latency = %#lu\n", vdev_set_latency);
     return rlt;
 }
 

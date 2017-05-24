@@ -65,7 +65,7 @@ VirtualDevice::VirtualDevice(const Params *p)
       delay_recover(p->delay_recover),
       delay_cpu_interrupt(p->delay_cpu_interrupt),
       is_interruptable(p->is_interruptable),
-      delay_remained(p->delay_remained),
+      delay_remained(p->delay_remained + p->delay_recover),
       event_interrupt(this, false, Event::Virtual_Interrupt)
 {
     trace.resize(0);
