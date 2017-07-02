@@ -1,46 +1,5 @@
-# Copyright (c) 2012-2013 ARM Limited
-# All rights reserved.
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2006-2008 The Regents of The University of Michigan
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met: redistributions of source code must retain the above copyright
-# notice, this list of conditions and the following disclaimer;
-# redistributions in binary form must reproduce the above copyright
-# notice, this list of conditions and the following disclaimer in the
-# documentation and/or other materials provided with the distribution;
-# neither the name of the copyright holders nor the names of its
-# contributors may be used to endorse or promote products derived from
-# this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# Authors: Steve Reinhardt
+# Authors: Xavier Lin
 
-# Simple test script
-#
-# "m5 test.py"
 
 import optparse
 import sys
@@ -123,7 +82,10 @@ def get_processes(options):
 parser = optparse.OptionParser()
 Options.addCommonOptions(parser)
 Options.addSEOptions(parser)
-Options.addEngyOptions(parser)
+parser.add_option("--icache-stall", action="store_true", default=False,
+                  help="imulate icache stall cycles in Atomic CPU")
+parser.add_option("--dcache-stall", action="store_true", default=False,
+                  help="imulate dcache stall cycles in Atomic CPU")
 
 if '--ruby' in sys.argv:
     Ruby.define_options(parser)
@@ -194,17 +156,11 @@ system.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock,
                                        voltage_domain =
                                        system.cpu_voltage_domain)
 
-# Create an energy management module with simple state machine
-system.energy_mgmt = EnergyMgmt(path_energy_profile = options.energy_profile,
-                                energy_time_unit = options.energy_time_unit,
-                                state_machine = SimpleEnergySM())
-
-system.energy_mgmt.m_energy_port = system.cpu[0].s_energy_port
-
 # All cpus belong to a common cpu_clk_domain, therefore running at a common
 # frequency.
 for cpu in system.cpu:
     cpu.clk_domain = system.cpu_clk_domain
+
 
 if is_kvm_cpu(CPUClass) or is_kvm_cpu(FutureClass):
     if buildEnv['TARGET_ISA'] == 'x86':
@@ -245,6 +201,12 @@ for i in xrange(np):
 
     if options.checker:
         system.cpu[i].addCheckerCpu()
+
+    if options.cpu_type == "atomic":
+        if options.icache_stall:
+            system.cpu[i].simulate_inst_stalls = True
+        if options.dcache_stall:
+            system.cpu[i].simulate_data_stalls = True
 
     system.cpu[i].createThreads()
 

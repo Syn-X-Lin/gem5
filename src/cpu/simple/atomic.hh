@@ -56,6 +56,12 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
     virtual void init();
 
+    enum State {
+        STATE_POWEROFF = 0,
+        STATE_HIGH_FREQ = 1,
+        STATE_LOW_FREQ = 2
+    };
+
   private:
 
     struct TickEvent : public Event
@@ -230,6 +236,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     double energy_consumed_per_cycle;
 
     bool in_interrupt;
+
+    State state;
 };
 
 #endif // __CPU_SIMPLE_ATOMIC_HH__

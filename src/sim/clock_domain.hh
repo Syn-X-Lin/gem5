@@ -237,6 +237,8 @@ class SrcClockDomain : public ClockDomain
         return freqOpPoints[perf_level];
     }
 
+    virtual int handleMsg(const EnergyMsg &msg);
+
     void startup();
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
