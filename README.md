@@ -1,26 +1,36 @@
-Getting Started
-===
+Gem5-NVP with Dynamic Frequency System (DFS)
+============================================
+
+This project is based on the gem5-NVP. (Latest update: 2017/06/30)
+
 The gem5-NVP is a simulating framework for non-volatile processors (NVP) and non-volatile systems based on the gem5 simulator. It provides multiple interfaces for adding description of SimObjects' energy behavior as well as an energy management module which allows users to simulate state changes (power-on, power-off, etc.) easily.
 
-## <span id="contents">Contents</span>
-* [Contents](#contents)
-* [Pre-Requirement](#prereq)
-* [Download](#download)
-* [Build](#build)
-* [Usages](#usages)
 
-## <span id="prereq">Pre-Requirement</span>
+## System Design and Implementation
+
+Below is the overview of our designed system for two-threshold/frequency NVP. Basically we maintain 3 classes here, Energy Management, ClockDomain and AtomicSimpleCPU. During the communication among these units, ports of Energy Management serves as the master, whereas ports of AtomicSimpleCPU and ClockDomain serve as slave. 
+
+![System Design](/docs/images/pipeline.png)
+
+*Energy Management* module is able to broadcast message to slave ports, and slave ports will handle messages sent and take responding actions. Each tick cycle, Energy Management module will first compute the net value of energy harvested and consumed. After that, it will examine its energy threshold, that is to say, if the current energy is above the higher threshold, message standing for high frequency will be broadcast, and if the current energy is below the lower threshold, message for powering off will be broadcast.
+
+*AtomicSimpleCPU* will reflect on the message by schedule or deschedule into eventqueue. A power-off message means that this processor needs to be shut down, so deschedule() will be called.
+
+*ClockDomain* will adjust its CPU clock frequency, i.e. the performance level of CPU, based on message it received
+
+## Example Research Report on Dynamic Frequency System
+
+See [Report](/docs/DFS.pdf).
+
+Gem5-NVP Readme
+===============
+
+## Pre-Requirement
+
 Gem5-NVP depends on nothing besides the dependencies of gem5 simulator. Tools needed before building gem5-NVP can be found at http://www.gem5.org/Dependencies.
 
-## <span id="download">Download</span>
-Gem5-NVP uses github to control its version. The latest stable version can be found at https://github.com/zlfben/gem5:master, and there are previous versions among tags of the repository (nvp-v*.*). You can get the latest stable version like this:
-```Bash
-git clone https://github.com/zlfben/gem5.git
-cd gem5
-git checkout master
-```
+## Build
 
-## <span id="build">Build</span>
 The build process of gem5-NVP is almost the same as gem5 simulator. Scons is used to build target system to be simulated. Theoretically, different ISAs are supported by gem5-NVP. However, gem5-NVP is tested under ARM, so the following build option is recommended:
 ```Bash
 mv README.md README
@@ -28,9 +38,12 @@ scons build/ARM/gem5.debug
 ```
 One tricky thing is that gem5 checks its original raw README during its build, so we can simply rename README.md into README. Markdown file is used only for better github page.
 
-## <span id="usages">Usages</span>
+## Usages
+
 Gem5-nvp provides an alternated script based on "./configs/example/se.py" to simulate energy-related systems, using System Call Emulation Mode in gem5. The path to the script is "./configs/example/se_engy.py". Gem5-nvp has several interfaces for users to control the energy behavior of the whole system. Most of the interfaces present as arguments of the "se_engy.py" script, while others (mostly debug output control) present as arguments of the target system such as "build/ARM/gem5.debug". Note: Target system in gem5 already receives arguments to control debug output, and gem5-NVP only adds some debug flags for energy behavior.
+
 #### Arguments of Simulating Script
+
 |Argument |Description |
 |:-----------------------------|:---------------------------------------------------------------------------------------|
 |--energy-prof={FILE} |Locate the path to energy profile. |
@@ -41,12 +54,15 @@ Gem5-nvp provides an alternated script based on "./configs/example/se.py" to sim
 |:--------------------|:---------------------------------------------------------------------------------|
 |--debug-flags={FLAGS}|Decide what kinds of debug information to print. "EnergyMgmt" for energy behavior.|
 |--debug-file={FILE} |Set the target file for debug output. |
+
 #### Example
+
 The following examples will simulate systems running "./test/test-progs/hello/bin/arm/linux/hello".
 To run exactly like gem5 (No energy behavior is simulated):
 ```Bash
 build/ARM/gem5.debug configs/example/se_engy.py -c tests/test-progs/hello/bin/arm/linux/hello
 ```
+
 To simulate atomic cpu's energy behavior, using energy profile "./profile/energy_prof", with energy_time_unit = 100, printing all the debug information of energy behavior into "./m5out/a.out":
 ```Bash
 build/ARM/gem5.debug --debug-flags=EnergyMgmt --debug-file=a.out configs/example/se_engy.py -c tests/test-progs/hello/bin/arm/linux/hello --energy-profile=./profile/energy_prof --energy-time-unit=100 --energy-modules='cpu'

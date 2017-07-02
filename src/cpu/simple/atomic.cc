@@ -61,7 +61,7 @@
 #include "sim/faults.hh"
 #include "sim/system.hh"
 #include "sim/full_system.hh"
-#include "engy/state_machine.hh"
+#include "engy/dfs.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -117,7 +117,7 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
       fastmem(p->fastmem), dcache_access(false), dcache_latency(0),
       vdev_set(false), vdev_set_latency(0),
       ppCommit(nullptr), energy_consumed_per_cycle(1),
-      in_interrupt(0)
+      in_interrupt(0), state(STATE_POWEROFF)
 {
     _status = Idle;
     lat_poweron = 0;
@@ -658,7 +658,8 @@ AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
     Tick lat = 0;
     DPRINTF(EnergyMgmt, "AtomicSimpleCPU handleMsg called at %lu, msg.type=%d\n", curTick(), msg.type);
     switch(msg.type){
-        case (int) SimpleEnergySM::MsgType::POWEROFF:
+        case (int) DFSSM::MsgType::POWEROFF:
+            state = AtomicSimpleCPU::State::STATE_POWEROFF;
             lat = tickEvent.when() - curTick();
             if (in_interrupt)
                 lat_poweron = lat + clockPeriod() - lat % clockPeriod();
@@ -666,9 +667,21 @@ AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
                 lat_poweron = 0;
             deschedule(tickEvent);
             break;
-        case (int) SimpleEnergySM::MsgType::POWERON:
-            consumeEnergy(energy_consumed_per_cycle * ticksToCycles(lat_poweron + BaseCPU::getTotalLat()));
-            schedule(tickEvent, curTick() + lat_poweron + BaseCPU::getTotalLat());
+        case (int) DFSSM::MsgType::HIGH_FREQ:
+            if (state == AtomicSimpleCPU::State::STATE_POWEROFF)
+            {
+                consumeEnergy(energy_consumed_per_cycle * ticksToCycles(lat_poweron + BaseCPU::getTotalLat()));
+                schedule(tickEvent, curTick() + lat_poweron + BaseCPU::getTotalLat());
+            }
+            state = AtomicSimpleCPU::State::STATE_HIGH_FREQ;
+            break;
+        case (int) DFSSM::MsgType::LOW_FREQ:
+            if (state == AtomicSimpleCPU::State::STATE_POWEROFF)
+            {
+                consumeEnergy(energy_consumed_per_cycle * ticksToCycles(lat_poweron + BaseCPU::getTotalLat()));
+                schedule(tickEvent, curTick() + lat_poweron + BaseCPU::getTotalLat());
+            }
+            state = AtomicSimpleCPU::State::STATE_LOW_FREQ;
             break;
         default:
             rlt = 0;

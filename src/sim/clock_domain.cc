@@ -46,12 +46,14 @@
 #include <functional>
 
 #include "debug/ClockDomain.hh"
+#include "debug/EnergyMgmt.hh"
 #include "params/ClockDomain.hh"
 #include "params/DerivedClockDomain.hh"
 #include "params/SrcClockDomain.hh"
 #include "sim/clock_domain.hh"
 #include "sim/voltage_domain.hh"
 #include "sim/clocked_object.hh"
+#include "engy/dfs.hh"
 
 void
 ClockDomain::regStats()
@@ -153,6 +155,25 @@ SrcClockDomain::perfLevel(PerfLevel perf_level)
 
     // Integrated switching of the actual clock value, too
     clockPeriod(clkPeriodAtPerfLevel());
+}
+
+int
+SrcClockDomain::handleMsg(const EnergyMsg &msg)
+{
+    int rlt = 1;
+    DPRINTF(EnergyMgmt, "SrcClockDomain handleMsg called at %lu, msg.type=%d\n", curTick(), msg.type);
+    switch(msg.type){
+        case (int) DFSSM::MsgType::HIGH_FREQ:
+            perfLevel(0);
+            break;
+        case (int) DFSSM::MsgType::LOW_FREQ:
+            if(freqOpPoints.size()>1)
+            perfLevel(1);
+            break;
+        default:
+            rlt = 0;
+    }
+    return rlt;
 }
 
 void
