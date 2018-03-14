@@ -55,19 +55,6 @@ class System(MemObject):
       void setMemoryMode(Enums::MemoryMode mode);
 ''')
 
-    # connect energy ports
-    def connect_energy_ports(self):
-       from m5.internal.pyobject import connectEnergyPorts
-       opts = self.energy_mgmt.energy_modules
-       modules = opts.split()
-       if 'cpu' in modules:
-           # print "CPU is connected to energy port."
-           for cpu in self.cpu:
-               connectEnergyPorts(self.energy_mgmt.getCCObject(), cpu.getCCObject())
-       if 'mem' in modules:
-           # print "Memory bus is connected to energy port."
-           connectEnergyPorts(self.energy_mgmt.getCCObject(), self.membus.getCCObject())
-
     memories = VectorParam.AbstractMemory(Self.all,
                                           "All memories in the system")
     mem_mode = Param.MemoryMode('atomic', "The mode the memory system is in")
@@ -83,6 +70,12 @@ class System(MemObject):
     # such that these can be passed from the I/O subsystem through an
     # I/O bridge or cache
     mem_ranges = VectorParam.AddrRange([], "Ranges that constitute main memory")
+
+    # Virtual Device Address Ranges
+    has_vdev = Param.Bool(False, "Whether the system has virtual devices")
+    vdev_ranges = VectorParam.AddrRange([], "Ranges that constitute virtual devices")
+    vaddr_vdev_ranges = VectorParam.AddrRange([],
+        "Virtual addresses that should be mapped to virtual devices")
 
     cache_line_size = Param.Unsigned(64, "Cache line size in bytes")
 

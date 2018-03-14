@@ -1770,6 +1770,46 @@ MaxAddr = Addr.max
 MaxTick = Tick.max
 AllMemory = AddrRange(0, MaxAddr)
 
+#####################################################################
+#
+# Energy Port objects
+#
+# Energy ports are used to interconnect objects that have energy
+# behavior.
+#
+#####################################################################
+
+# Energy port reference: a reference to the energy port on a
+# SimObject. It is used to connect energy ports in python script.
+class EnergyPort(object):
+    def __init__(self, simobj):
+        self.simobj = simobj
+
+# Master energy port reference
+class MasterEnergyPort(EnergyPort):
+    def __init__(self, simobj):
+        super(MasterEnergyPort, self).__init__(simobj)
+        self.slave_list = []
+    def connectRef(self, slave):
+        self.slave_list.append(slave)
+        slave.is_connected = True
+    def connect(self):
+        from m5.internal.pyobject import connectEnergyPorts
+        for slave in self.slave_list:
+            connectEnergyPorts(self.simobj.getCCObject(), slave.simobj.getCCObject())
+
+# Slave energy port reference
+class SlaveEnergyPort(EnergyPort):
+    def __init__(self, simobj):
+        super(SlaveEnergyPort, self).__init__(simobj)
+        self.master = None
+        self.is_connected = False
+    def connectRef(self, master):
+        if self.is_connected:
+            return
+        self.master = master
+        master.connectRef(self)
+
 
 #####################################################################
 #
@@ -2109,6 +2149,8 @@ __all__ = ['Param', 'VectorParam',
            'Time',
            'NextEthernetAddr', 'NULL',
            'MasterPort', 'SlavePort',
-           'VectorMasterPort', 'VectorSlavePort']
+           'VectorMasterPort', 'VectorSlavePort',
+           'EnergyPort',
+           'MasterEnergyPort', 'SlaveEnergyPort']
 
 import SimObject

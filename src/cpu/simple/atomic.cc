@@ -53,6 +53,7 @@
 #include "debug/ExecFaulting.hh"
 #include "debug/SimpleCPU.hh"
 #include "debug/EnergyMgmt.hh"
+#include "debug/VirtualDevice.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "mem/physical.hh"
@@ -60,7 +61,7 @@
 #include "sim/faults.hh"
 #include "sim/system.hh"
 #include "sim/full_system.hh"
-#include "engy/state_machine.hh"
+#include "engy/dfs.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -114,9 +115,12 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
       icachePort(name() + ".icache_port", this),
       dcachePort(name() + ".dcache_port", this),
       fastmem(p->fastmem), dcache_access(false), dcache_latency(0),
-      ppCommit(nullptr)
+      vdev_set(false), vdev_set_latency(0),
+      ppCommit(nullptr), energy_consumed_per_cycle(1),
+      in_interrupt(0), state(STATE_POWEROFF)
 {
     _status = Idle;
+    lat_poweron = 0;
 }
 
 
@@ -510,7 +514,7 @@ AtomicSimpleCPU::tick()
 {
     DPRINTF(SimpleCPU, "Tick\n");
 
-    consumeEnergy(1);
+    in_interrupt = 0;
 
     Tick latency = 0;
 
@@ -601,6 +605,11 @@ AtomicSimpleCPU::tick()
             if (simulate_data_stalls && dcache_access)
                 stall_ticks += dcache_latency;
 
+            if (vdev_set) {
+                vdev_set = 0;
+                stall_ticks += vdev_set_latency;
+            }
+
             if (stall_ticks) {
                 // the atomic cpu does its accounting in ticks, so
                 // keep counting in ticks but round to the clock
@@ -620,6 +629,8 @@ AtomicSimpleCPU::tick()
     // instruction takes at least one cycle
     if (latency < clockPeriod())
         latency = clockPeriod();
+
+    consumeEnergy(energy_consumed_per_cycle * ticksToCycles(latency));
 
     if (_status != Idle)
         schedule(tickEvent, curTick() + latency);
@@ -644,17 +655,65 @@ int
 AtomicSimpleCPU::handleMsg(const EnergyMsg &msg)
 {
     int rlt = 1;
-    DPRINTF(EnergyMgmt, "handleMsg called at %lu, msg.type=%d\n", curTick(), msg.type);
+    Tick lat = 0;
+    DPRINTF(EnergyMgmt, "AtomicSimpleCPU handleMsg called at %lu, msg.type=%d\n", curTick(), msg.type);
     switch(msg.type){
-        case (int) SimpleEnergySM::MsgType::POWEROFF:
+        case (int) DFSSM::MsgType::POWEROFF:
+            state = AtomicSimpleCPU::State::STATE_POWEROFF;
+            lat = tickEvent.when() - curTick();
+            if (in_interrupt)
+                lat_poweron = lat + clockPeriod() - lat % clockPeriod();
+            else
+                lat_poweron = 0;
             deschedule(tickEvent);
             break;
-        case (int) SimpleEnergySM::MsgType::POWERON:
-            schedule(tickEvent, curTick() + 10);
+        case (int) DFSSM::MsgType::HIGH_FREQ:
+            if (state == AtomicSimpleCPU::State::STATE_POWEROFF)
+            {
+                consumeEnergy(energy_consumed_per_cycle * ticksToCycles(lat_poweron + BaseCPU::getTotalLat()));
+                schedule(tickEvent, curTick() + lat_poweron + BaseCPU::getTotalLat());
+            }
+            state = AtomicSimpleCPU::State::STATE_HIGH_FREQ;
+            break;
+        case (int) DFSSM::MsgType::LOW_FREQ:
+            if (state == AtomicSimpleCPU::State::STATE_POWEROFF)
+            {
+                consumeEnergy(energy_consumed_per_cycle * ticksToCycles(lat_poweron + BaseCPU::getTotalLat()));
+                schedule(tickEvent, curTick() + lat_poweron + BaseCPU::getTotalLat());
+            }
+            state = AtomicSimpleCPU::State::STATE_LOW_FREQ;
             break;
         default:
             rlt = 0;
     }
+    return rlt;
+}
+
+int
+AtomicSimpleCPU::virtualDeviceDelay(Tick tick)
+{
+    int rlt = 1;
+    Tick time = tickEvent.when();
+    if (tick % clockPeriod())
+        tick += clockPeriod() - tick % clockPeriod();
+    time += tick;
+    reschedule(tickEvent, time);
+    return rlt;
+}
+
+int
+AtomicSimpleCPU::virtualDeviceInterrupt(Tick tick)
+{
+    in_interrupt = 1;
+    return virtualDeviceDelay(tick);
+}
+
+int AtomicSimpleCPU::virtualDeviceSet(Tick tick)
+{
+    int rlt = 1;
+    vdev_set = 1;
+    vdev_set_latency = tick;
+    DPRINTF(VirtualDevice, "AtomicCPU virtualDeviceSet vdev_set_latency = %#lu\n", vdev_set_latency);
     return rlt;
 }
 

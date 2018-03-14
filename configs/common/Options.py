@@ -247,13 +247,13 @@ def addEngyOptions(parser):
     # Energy Management Options
     parser.add_option("--energy-profile", default="",
                       help="Path to energy profile.")
-    parser.add_option("--energy-time-unit", action="store", type="int",
-                      default=1000,
-                      help="Energy time unit of energy profile in ticks.")
-    parser.add_option("--energy-modules", default="",
-                      help="""The objects that we care about in case of
-                      energy consuming, splitted by space, use " "
-                      around the entire string. (e.g. "cpu mem")""")
+    parser.add_option("--energy-time-unit", action="store", type="string",
+                      default='1us',
+                      help="Energy time unit of energy profile.")
+    parser.add_option("--thres-high", type="float", default=100,
+                      help="high threshold of energy state machine")
+    parser.add_option("--thres-low", type="float", default=50,
+                      help="low threshold of energy state machine")
 
 def addFSOptions(parser):
     # Simulation options

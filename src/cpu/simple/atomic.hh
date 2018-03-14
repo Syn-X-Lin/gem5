@@ -56,6 +56,12 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
     virtual void init();
 
+    enum State {
+        STATE_POWEROFF = 0,
+        STATE_HIGH_FREQ = 1,
+        STATE_LOW_FREQ = 2
+    };
+
   private:
 
     struct TickEvent : public Event
@@ -73,6 +79,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     bool locked;
     const bool simulate_data_stalls;
     const bool simulate_inst_stalls;
+
+    Tick lat_poweron;
 
     /**
      * Drain manager to use when signaling drain completion
@@ -179,6 +187,9 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     bool dcache_access;
     Tick dcache_latency;
 
+    bool vdev_set;
+    Tick vdev_set_latency;
+
     /** Probe Points. */
     ProbePointArg<std::pair<SimpleThread*, const StaticInstPtr>> *ppCommit;
 
@@ -217,6 +228,16 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     void printAddr(Addr a);
 
     virtual int handleMsg(const EnergyMsg &msg);
+
+    virtual int virtualDeviceInterrupt(Tick tick);
+    virtual int virtualDeviceDelay(Tick tick);
+    virtual int virtualDeviceSet(Tick tick);
+
+    double energy_consumed_per_cycle;
+
+    bool in_interrupt;
+
+    State state;
 };
 
 #endif // __CPU_SIMPLE_ATOMIC_HH__

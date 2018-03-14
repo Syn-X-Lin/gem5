@@ -9,6 +9,7 @@
 #include "params/EnergyMgmt.hh"
 
 class BaseEnergySM;
+class BaseHarvest;
 
 class EnergyMgmt : public SimObject
 {
@@ -28,7 +29,7 @@ public:
     int handleMsg(const EnergyMsg &msg);
 
 protected:
-    int time_unit;
+    Tick time_unit;
     double energy_remained;
     /* msg_togo is changed into a queue to prevent bugs in case that multiple state changes occurs in one tick. */
     std::vector<EnergyMsg> msg_togo;
@@ -37,6 +38,7 @@ protected:
     void energyHarvest();
     EventWrapper<EnergyMgmt, &EnergyMgmt::energyHarvest> event_energy_harvest;
     BaseEnergySM *state_machine;
+    BaseHarvest *harvest_module;
 
 private:
     std::vector<double> readEnergyProfile();

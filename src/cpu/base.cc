@@ -255,6 +255,9 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
         fatal("Number of ISAs (%i) assigned to the CPU does not equal number "
               "of threads (%i).\n", params()->isa.size(), numThreads);
     }
+
+    lat_vdev.resize(0);
+    status_vdev.resize(0);
 }
 
 void
@@ -739,4 +742,41 @@ BaseCPU::traceFunctionsInternal(Addr pc)
                  curTick() - functionEntryTick, curTick(), sym_str);
         functionEntryTick = curTick();
     }
+}
+
+int
+BaseCPU::registerVDev(Tick tick, uint32_t &id)
+{
+    id = lat_vdev.size();
+    lat_vdev.push_back(tick);
+    status_vdev.push_back(0);
+    return 1;
+}
+
+Tick
+BaseCPU::getTotalLat()
+{
+    Tick total = 0;
+    auto iter_lat = lat_vdev.cbegin();
+    auto iter_status = status_vdev.cbegin();
+    for (; iter_lat != lat_vdev.cend() && iter_status != status_vdev.cend();
+           iter_lat++, iter_status++) {
+        if (*iter_status)
+            total += (*iter_lat);
+    }
+    return total;
+}
+
+int
+BaseCPU::virtualDeviceStart(uint32_t id)
+{
+    status_vdev[id] = 1;
+    return 1;
+}
+
+int
+BaseCPU::virtualDeviceEnd(uint32_t id)
+{
+    status_vdev[id] = 0;
+    return 1;
 }

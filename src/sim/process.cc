@@ -341,7 +341,16 @@ void
 Process::allocateMem(Addr vaddr, int64_t size, bool clobber)
 {
     int npages = divCeil(size, (int64_t)PageBytes);
-    Addr paddr = system->allocPhysPages(npages);
+    Addr paddr;
+    if (system->has_vdev) {
+        if (system->isVAddrOfVdev(vaddr)) {
+            paddr = system->allocVdevPages(vaddr, size);
+        } else {
+            paddr = system->allocPhysPages(npages);
+        }
+    } else {
+        paddr = system->allocPhysPages(npages);
+    }
     pTable->map(vaddr, paddr, size, clobber ? PageTableBase::Clobber : 0);
 }
 
